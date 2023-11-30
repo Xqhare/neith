@@ -1,0 +1,66 @@
+{
+  "table_name0": {
+    "collum_name0": {
+        "unique": true,
+        "type": "int",
+        "entry": [1, 2]
+      },
+      "collum_name1": {
+        "unique": false,
+        "type": "string",
+        "entry": ["Cruise", "Test"]
+      },
+      "collum_name2": {
+        "unique": false,
+        "type": "string",
+        "entry": ["testing", "small"]
+      },
+      "collum_name3": {
+        "unique": false,
+        "type": "bool",
+        "entry": [true, false]
+      },
+      "collum_name4": {
+        "unique": false,
+        "type": "float",
+        "entry": [1.01, 0.0005]
+      },
+      "collum_name5": {
+        "unique": false,
+        "type": "int",
+        "entry": [2, -2]
+      }
+  },
+  "table_name1": {
+    "collum_name0": {
+        "unique": true,
+        "type": "int",
+        "entry": [0, 1]
+      },
+      "collum_name1": {
+        "unique": false,
+        "type": "string",
+        "entry": ["Cruise", "Test"]
+      },
+      "collum_name2": {
+        "unique": false,
+        "type": "string",
+        "entry": ["testing", "small"]
+      },
+      "collum_name3": {
+        "unique": false,
+        "type": "bool",
+        "entry": [true, false]
+      },
+      "collum_name4": {
+        "unique": false,
+        "type": "float",
+        "entry": [1.01, 0.0005]
+      },
+      "collum_name5": {
+        "unique": false,
+        "type": "int",
+        "entry": [2, -2]
+      }
+  }
+}
