@@ -1,3 +1,7 @@
+
+// This is the Json-Wizard or Jisard for short.
+mod jisard;
+
 fn main() {
-    println!("Hello, world!");
+    jisard::main();
 }
