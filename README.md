@@ -1,1 +1,73 @@
-# neith
+# NEITH: Neith Enhances Information Through Hierarchy
+Neith is a small, lightweight and BLAZINGLY FAST database.
+
+## Naming
+
+The name Neith is derived from Neith, the ancient Egyptian goddess of war, creation, and weaving. She represents the intricate connections and patterns that form the cosmos and foundation of knowledge. 
+
+Her name resonates with the purpose of this database, which aims to weave together desperate peices of information into a cohesive and meaningful tapestry of data. Just as Neith skillfully weaves threads into exquisite fabrics, this database seeks to seamlessly integrate and organize data to unveil hidden insights. Neith's association with order reflecting the databese's ability to efficiently manage and organize data.
+
+The name Neith embodies the essence of this database, symbolizing it's ability to weave together, transform and illuminate the data, much like the goddess herself.
+
+### Recursive Acronym
+The name is also a recursive arconym:
+
+Neith
+Enhances
+Information
+Through
+Hierarchy
+
+## Datatypes
+It supports only basic datatypes.
+As well as Lists. However, lists can only contain one of the datatypes. Meaning that a list containing a boolean and a string is invalid.
+Types are followed by their respective name in the API in parenthesis.
+
+### Single types:
+- Signed integers (int)
+- Floats (float)
+- Booleans (bool)
+- Strings (string)
+
+### List types:
+- List of signed integers (lint)
+- List of floats (lfloat)
+- List of booleans (lbool)
+- List of stings (lstring)
+
+
+## API
+Neith has a very simple API.
+
+### Connecting
+It is called with the `connection(path)` function, the returned type is the connection to the database.
+
+### Writing data
+
+#### Tables
+For creating tables use the `mk_table(table_name, collum_vec((collum_name0, unique_bool, type)), (collum_name1, unique_bool, type))` function.
+This creates a table with the name `table_name` and the collums `collum_name0` and `collum_name1`. 
+Each collum needs a `unique_bool` boolean demarcating if the collum contents will be unique (eg. the ID), as well as the type of data to be stored.
+##### Notes on tables
+Tables cannot be renamed, or the name, unique boolean and type of their collums changed.
+
+#### Rows
+Updates a single collum entry of a table.
+`update("{table_name} set {collum_name} = {value} where {other_collum_name} = {other_value}")`
+
+### Deleting data
+Deletes an entire row.
+`delete("{table_name} where {collum_name} = {value}")`
+
+### Reading data
+Selects entry in specified collum. * is valid for all collums.
+Reading more than one collum is not supported.
+`select("{collum_name} from {table_name} where {other_collum_name} = {value}")`
+
+### Convinience functions:
+Returns the maximum value of a given row.
+`max(collum_name)`
+Returns the minimum value of a given row.
+`min(collum_name)`
+Returns the length of a table.
+`len(table_name)`
