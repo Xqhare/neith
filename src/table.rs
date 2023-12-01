@@ -5,15 +5,25 @@ use crate::column::Column;
 
 #[derive(Clone, Debug)]
 pub struct Table {
-    columns: Column,
+    name: String,
+    columns: Vec<Column>,
 }
 
-fn decode_json_table(table_contents: JsonValue) {
-    for entry in table_contents.entries() {
-        // println!("{:?}", entry);
-        let test = Column::from_neith_json_column(entry);
-        println!("------------------");
-        println!("{:?}", test);
-        println!("------------------");
+impl Default for Table {
+    fn default() -> Self {
+        unimplemented!()
     }
 }
+
+impl Table {
+    pub fn from_neithdb_table_data(input_data: (&str, &JsonValue)) -> Self {
+        let name = input_data.0.to_string();
+        let mut out: Vec<Column> = Vec::new();
+        for column in input_data.1.entries() {
+            out.push(Column::from_neithdb_column_data(column));
+        }
+        return Table{name, columns: out};
+    }
+}
+
+
