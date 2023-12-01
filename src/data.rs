@@ -3,7 +3,7 @@ use std::io::Error;
 use json::JsonValue;
 
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Data {
     List(Vec<Data>),
     Float(f64),
