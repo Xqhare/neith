@@ -1,3 +1,6 @@
 /target
 *.vim
 *.json
+
+# This is a library; so no Cargo.lock
+Cargo.lock
