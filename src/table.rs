@@ -11,18 +11,27 @@ pub struct Table {
 
 impl Default for Table {
     fn default() -> Self {
-        unimplemented!()
+        let name = String::new();
+        let columns: Vec<Column> = Vec::new();
+        return Table {name, columns, };
+    }
+}
+
+impl From<(&str, &JsonValue)> for Table {
+    fn from(value: (&str, &JsonValue)) -> Self {
+        let name = value.0.to_string();
+        let mut out: Vec<Column> = Vec::new();
+        for column in value.1.entries() {
+            out.push(Column::from_neithdb_column_data(column));
+        }
+        return Table{name, columns: out};
     }
 }
 
 impl Table {
-    pub fn from_neithdb_table_data(input_data: (&str, &JsonValue)) -> Self {
-        let name = input_data.0.to_string();
-        let mut out: Vec<Column> = Vec::new();
-        for column in input_data.1.entries() {
-            out.push(Column::from_neithdb_column_data(column));
-        }
-        return Table{name, columns: out};
+    pub fn new(name: String) -> Self {
+        let columns: Vec<Column> = Vec::new();
+        return Table {name, columns, };
     }
 }
 
