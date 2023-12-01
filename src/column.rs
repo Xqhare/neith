@@ -14,13 +14,6 @@ pub struct ColumnData {
     all_row_data: Vec<Data>,
 }
 
-impl Default for ColumnData {
-    fn default() -> Self {
-        let row_data: Vec<Data> = Vec::new();
-        return ColumnData{all_row_data: row_data};
-    }
-}
-
 impl Default for Column {
     fn default() -> Self {
         let name = String::new();
@@ -28,7 +21,14 @@ impl Default for Column {
         let contents = ColumnData::default();
         return Column{ name, unique, contents, };
     }
-} 
+}
+
+impl Default for ColumnData {
+    fn default() -> Self {
+        let row_data: Vec<Data> = Vec::new();
+        return ColumnData{all_row_data: row_data};
+    }
+}
 
 impl Column {
     pub fn from_neithdb_column_data(column_value: (&str, &JsonValue)) -> Self {
