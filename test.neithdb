@@ -1,0 +1,98 @@
+{
+  "table_name0": {
+    "collum_name0": {
+        "unique": true,
+        "type": "int",
+        "entry": [1, 2]
+      },
+      "collum_name1": {
+        "unique": false,
+        "type": "string",
+        "entry": ["Cruise", "Test"]
+      },
+      "collum_name2": {
+        "unique": false,
+        "type": "string",
+        "entry": ["testing", "small"]
+      },
+      "collum_name3": {
+        "unique": false,
+        "type": "bool",
+        "entry": [true, false]
+      },
+      "collum_name4": {
+        "unique": false,
+        "type": "float",
+        "entry": [1.01, 0.0005]
+      },
+      "collum_name5": {
+        "unique": false,
+        "type": "int",
+        "entry": [2, -2]
+      }
+  },
+  "table_name1": {
+    "collum_name0": {
+        "unique": true,
+        "type": "int",
+        "entry": [0, 1]
+      },
+      "collum_name1": {
+        "unique": false,
+        "type": "string",
+        "entry": ["Cruise", "Test"]
+      },
+      "collum_name2": {
+        "unique": false,
+        "type": "string",
+        "entry": ["testing", "small"]
+      },
+      "collum_name3": {
+        "unique": false,
+        "type": "bool",
+        "entry": [true, false]
+      },
+      "collum_name4": {
+        "unique": false,
+        "type": "float",
+        "entry": [1.01, 0.0005]
+      },
+      "collum_name5": {
+        "unique": false,
+        "type": "int",
+        "entry": [2, -2]
+      }
+  },
+  "list_table": {
+    "MIXED_collum": {
+        "unique": false,
+        "type": "mixed_list",
+        "entry": [["string", "aVeryLongStringThatIsVeryLong", true], [5, 1.01, "WowAString", -7]]
+      },
+    "collum_name0": {
+        "unique": true,
+        "type": "lint",
+        "entry": [[0, 1], [2, 3]]
+      },
+      "collum_name1": {
+        "unique": false,
+        "type": "lstring",
+        "entry": [["Cruise", "Test"], ["Another", "test"]]
+      },
+      "collum_name3": {
+        "unique": false,
+        "type": "lbool",
+        "entry": [[true, false], [false, true]]
+      },
+      "collum_name4": {
+        "unique": false,
+        "type": "lfloat",
+        "entry": [[1.01, 0.0005], [5.05, 0.0001]]
+      },
+      "collum_name5": {
+        "unique": false,
+        "type": "lint",
+        "entry": [[0, 1], [-2, 3]]
+      }
+  }
+}
