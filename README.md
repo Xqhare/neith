@@ -39,11 +39,12 @@ It is called with the `connection(path)` function, the returned type is the conn
 ### Writing data
 
 #### Tables
-For creating tables use the `mk_table(table_name, column_vec((column_name0, unique_bool, type)), (column_name1, unique_bool, type))` function.
+For creating tables use the `mk_table(table_name, column_vec((column_name0, unique_bool)), (column_name1, unique_bool))` function.
 This creates a table with the name `table_name` and the columns `column_name0` and `column_name1`. 
-Each column needs a `unique_bool` boolean demarcating if the column contents will be unique (eg. the ID), as well as the type of data to be stored.
+Each column needs a `unique_bool` boolean demarcating if the column contents will be unique (eg. the ID).
+`mk_column` is for making columns.
 ##### Notes on tables
-Tables cannot be renamed, or the name, unique boolean and type of their columns changed.
+Tables cannot be renamed, nor the name or unique boolean of their columns changed.
 
 #### Rows
 Updates a single column entry of a table.
