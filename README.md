@@ -19,22 +19,14 @@ Through
 Hierarchy
 
 ## Datatypes
-It supports only basic datatypes.
-As well as Lists. However, lists can only contain one of the datatypes. Meaning that a list containing a boolean and a string is invalid.
+It supports only basic datatypes, floating point numbers, booleans, strings, as well as Lists.
 Types are followed by their respective name in the API in parenthesis.
 
 ### Single types:
-- Signed integers (int)
 - Floats (float)
 - Booleans (bool)
 - Strings (string)
-
-### List types:
-- List of signed integers (lint)
-- List of floats (lfloat)
-- List of booleans (lbool)
-- List of stings (lstring)
-
+- Lists of any type (list)
 
 ## API
 Neith has a very simple API.
