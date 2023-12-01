@@ -6,12 +6,20 @@ use json::*;
 
 use crate::table::Table;
 
-pub fn main() {
-    let aaa = read_json_from_neithdb_file("test.neithdb");
-    // This makes tables! 
-    for table in aaa.entries() {
-        let aaa = Table::from_neithdb_table_data(table);
-        println!("AAA: {:?}", aaa);
+#[derive(Clone, Debug)]
+pub struct Neith {
+    tables: Vec<Table>,
+}
+
+impl Neith {
+    pub fn from_neithdb_file<P>(filename: P) -> Self where P: AsRef<Path> {
+        let read_file = read_json_from_neithdb_file(filename);
+        let mut out: Vec<Table> = Vec::new();
+        for table in read_file.entries() {
+            let table = Table::from_neithdb_table_data(table);
+            out.push(table);
+        }
+        return Neith{tables: out};
     }
 }
 
