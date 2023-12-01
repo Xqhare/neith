@@ -23,8 +23,6 @@ It supports only basic datatypes, floating point numbers, booleans, strings, as 
 Signed and unsigned intergers are excluded for the sake of simplicity, ease of use and a smaller footprint.
 If you really need to use them, Neith is not for you.
 
-
-
 ### Types:
 Types are followed by their respective name in the API in parenthesis.
 - Floats (float)
