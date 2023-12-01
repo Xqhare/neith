@@ -20,9 +20,13 @@ Hierarchy
 
 ## Datatypes
 It supports only basic datatypes, floating point numbers, booleans, strings, as well as Lists.
-Types are followed by their respective name in the API in parenthesis.
+Signed and unsigned intergers are excluded for the sake of simplicity, ease of use and a smaller footprint.
+If you really need to use them, Neith is not for you.
 
-### Single types:
+
+
+### Types:
+Types are followed by their respective name in the API in parenthesis.
 - Floats (float)
 - Booleans (bool)
 - Strings (string)
