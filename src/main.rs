@@ -1,3 +1,5 @@
+use jisard::Neith;
+
 
 // This is the Json-Wizard or Jisard for short.
 mod jisard;
@@ -9,5 +11,6 @@ mod table;
 mod data;
 
 fn main() {
-    jisard::main();
+    let test = Neith::from_neithdb_file("test.neithdb");
+    println!("NeitData: {:?}", test);
 }
