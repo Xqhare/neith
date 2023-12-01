@@ -2,30 +2,33 @@ use json::JsonValue;
 
 use crate::data::Data;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Column {
     name: String,
     unique: bool,
     contents: ColumnData,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ColumnData {
     all_row_data: Vec<Data>,
 }
 
 impl Default for ColumnData {
     fn default() -> Self {
-        let aaa: Vec<Data> = Vec::new();
-        return ColumnData{all_row_data: aaa};
+        let row_data: Vec<Data> = Vec::new();
+        return ColumnData{all_row_data: row_data};
     }
 }
 
-/* impl Default for Column {
+impl Default for Column {
     fn default() -> Self {
-        
+        let name = String::new();
+        let unique = false;
+        let contents = ColumnData::default();
+        return Column{ name, unique, contents, };
     }
-} */
+} 
 
 impl Column {
     pub fn from_neithdb_column_data(column_value: (&str, &JsonValue)) -> Self {
