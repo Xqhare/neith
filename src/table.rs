@@ -3,7 +3,7 @@ use json::JsonValue;
 use crate::column::Column;
 
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Table {
     name: String,
     columns: Vec<Column>,
