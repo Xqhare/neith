@@ -28,7 +28,7 @@ impl Default for ColumnData {
 } */
 
 impl Column {
-    pub fn from_neith_json_column(column_value: (&str, &JsonValue)) -> Self {
+    pub fn from_neithdb_column_data(column_value: (&str, &JsonValue)) -> Self {
         let name = column_value.0.to_string();
         println!("NAME: {:?}", name);
         let mut data_object = column_value.1.clone();
