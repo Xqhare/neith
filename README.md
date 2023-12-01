@@ -45,14 +45,14 @@ It is called with the `connection(path)` function, the returned type is the conn
 ### Writing data
 
 #### Tables
-For creating tables use the `mk_table(table_name, collum_vec((collum_name0, unique_bool, type)), (collum_name1, unique_bool, type))` function.
-This creates a table with the name `table_name` and the collums `collum_name0` and `collum_name1`. 
-Each collum needs a `unique_bool` boolean demarcating if the collum contents will be unique (eg. the ID), as well as the type of data to be stored.
+For creating tables use the `mk_table(table_name, column_vec((column_name0, unique_bool, type)), (column_name1, unique_bool, type))` function.
+This creates a table with the name `table_name` and the columns `column_name0` and `column_name1`. 
+Each column needs a `unique_bool` boolean demarcating if the column contents will be unique (eg. the ID), as well as the type of data to be stored.
 ##### Notes on tables
-Tables cannot be renamed, or the name, unique boolean and type of their collums changed.
+Tables cannot be renamed, or the name, unique boolean and type of their columns changed.
 
 #### Rows
-Updates a single collum entry of a table.
+Updates a single column entry of a table.
 `update("{table_name} set {collum_name} = {value} where {other_collum_name} = {other_value}")`
 
 ### Deleting data
@@ -60,9 +60,9 @@ Deletes an entire row.
 `delete("{table_name} where {collum_name} = {value}")`
 
 ### Reading data
-Selects entry in specified collum. * is valid for all collums.
-Reading more than one collum is not supported.
-`select("{collum_name} from {table_name} where {other_collum_name} = {value}")`
+Selects entry in specified column. * is valid for all columns.
+Reading more than one column is not supported.
+`select("{column_name} from {table_name} where {other_column_name} = {value}")`
 
 ### Convinience functions:
 Returns the maximum value of a given row.
