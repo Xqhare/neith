@@ -4,8 +4,10 @@ use std::{io::Read, fs::File, path::Path};
 
 use json::*;
 
+use crate::column::Column;
+
 pub fn main() {
-    let aaa = read_json_from_file("test.json");
+    let aaa = read_json_from_file("test.neithdb");
     // This makes tables! 
     for table in aaa.entries() {
         // table.0 == table name
@@ -16,7 +18,10 @@ pub fn main() {
 
 fn decode_json_table(table_contents: JsonValue) {
     for entry in table_contents.entries() {
-        println!("{:?}", entry);
+        // println!("{:?}", entry);
+        let test = Column::from_neith_json_column(entry);
+        println!("------------------");
+        println!("{:?}", test);
         println!("------------------");
     }
 }
