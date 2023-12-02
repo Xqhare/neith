@@ -1,6 +1,10 @@
 # NEITH: Neith Enhances Information Through Hierarchy
 Neith is a small, lightweight and BLAZINGLY FAST database.
 
+Neith is not made for large projects, or projects that need to do a lot of data intensive work. Neith is made for small projects, with the need for some database storage and simple logic. For large datasets more ram is needed as Neith holds the entire database in memory from startup, leading to fast reads and writes (except the save to disc of course). Users are strongly discuraged from using complex api requests, this is mainly because it does not support multicore - maybe at some point, no promises - so performance can be impacted by such requests.
+
+I tried to make it as unopinionated as possible so it will try to do whatever it is told to do; So beware of what you tell it to do!
+
 ## Naming
 
 The name Neith is derived from Neith, the ancient Egyptian goddess of war, creation, and weaving. She represents the intricate connections and patterns that form the cosmos and foundation of knowledge. 
