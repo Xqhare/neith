@@ -49,7 +49,7 @@ Example syntax is explained further down, this is a reference table.
 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 
 | - | - | - | - | - | - | - | 
 | execute( | new | table / column / data | 'tablename' | with / with / (columnname0, columnname1, ...) OR ('other_columnname' = 'new_data', ...) | ('rowname' 'unique', ...) / ('rowname' 'unique', ...) / values (val0, val1, ...)) 
-| execute( | delete | table / column | with | 'tablename' / 'columnname' | in | 'tablename') |
+| execute( | delete | table / column / row | with / with / in | 'tablename' / 'columnname' / 'tablename' | in / where | 'tablename' / ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]) |
 | execute( | update | 'tablename' | where | ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...] | with | ('other_columnname' = 'new_data', ...)) | 
 | execute( | select | (columnname0, columnname1, ...)  / * | from | 'tablename' | where | ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]) |
 | execute( | get | min / max / len | in / in / of |  'columnname' / 'columnname' / 'tablename' | from | 'tablename') |
@@ -57,33 +57,73 @@ Example syntax is explained further down, this is a reference table.
 #### Writing data
 
 ##### Tables
+```
+let con = Neith::connect("test.neithdb");
+let new_table = con.execute("new table testtable with (column1 true, column2 false, column3 false)");
+```
+This creates a table with the name `testtable` and the columns `column1`, `column2` and `column3`. 
 
-This creates a table with the name `table_name` and the columns `column_name0` and `column_name1`. 
 Each column needs a `unique_bool` boolean demarcating if the column contents will be unique (eg. the ID).
+
 ###### Notes on tables
 Tables cannot be renamed, nor the name or unique boolean of their columns changed.
 
-##### Rows
+##### Columns
+```
+let con = Neith::connect("test.neithdb");
+let new_column = con.execute("new column testtable with column4 and column5, unique");
+```
+This extends the created `testable` with `column4` and `column5`.
+
+```
+let con = Neith::connect("test.neithdb");
+let update1 = con.execute("update testtable where [column2 = 1 and column4 = text] with (column3 = true)");
+let update2 = con.execute("update testtable where [column2 = -2.04 or column2 = 1] with (column3 = false)").unwrap();
+let update3 = con.execute("update testtable where [column4 = text not column2 = -2.04] with (column5 = (-1, 1.04, true, test text))");
+```
+
 Updates a single column entry of a table.
 
+##### Rows
+
+```
+let con = Neith::connect("test.neithdb");
+let new_data_column1 = con.execute("new data testtable (column1, column2, column3, column4, column5) (1, -2.04, true, text, (1.04, 2, false, more text))");
+let new_data_column2 = con.execute("new data testtable (column1, column2, column3, column4, column5) (2, -2.04, true, text, (1.04, 2, false, more text))");
+let new_data_column3 = con.execute("new data testtable (column1 = 3, column2 = 1, column4 = text)");
+let new_data_column4 = con.execute("new data testtable (column1 = 4, column2 = 1, column4 = text)");
+```
 
 #### Deleting data
 
 ##### Tables
 
+```
+let con = Neith::connect("test.neithdb");
+let _del_row = con.execute("delete row in testtable where [column1 = 4 and column4 = text]");
+let del_column = con.execute("delete column with column5 and column4 in testtable");
+let del_table = con.execute("delete table with testtable");
+```
+
 ##### Rows
 Deletes an entire row.
-`delete("{table_name} where {collum_name} = {value}")`
 
 #### Reading data
+
+```
+let con = Neith::connect("test.neithdb");
+let select1 = con.execute("select * from testtable");
+let select2 = con.execute("select (column1, column2, column3, column4) from testtable");
+```
+
 Selects entry in specified column. * is valid for all columns.
-Reading more than one column is not supported.
-`select("{column_name} from {table_name} where {other_column_name} = {value}")`
 
 #### Convinience functions:
-Returns the maximum value of a given row.
-`max(collum_name)`
-Returns the minimum value of a given row.
-`min(collum_name)`
-Returns the length of a table.
-`len(table_name)`
+
+```
+let con = Neith::connect("test.neithdb");
+let get_min = con.execute("get min in column1 from testtable");
+let get_max = con.execute("get max on column1 from testtable");
+let get_len = con.execute("get len of testtable");
+```
+
