@@ -33,6 +33,7 @@ Types are followed by their respective name in the API in parenthesis.
 ## API
 Neith has a very simple API. It uses two functions, `connect()`, as well as `execute()`.
 The first is only used once to create a connection to the database, any interaction with it is done with the `execute()` function.
+The `execute()` function uses Neithql or nql, a very simple and basic implementation of some sql syntax.
 
 ### Connecting
 It is called with the `connection(path)` function, the returned type is the connection to the database.
@@ -43,11 +44,14 @@ Example syntax is explained further down, this is a reference table.
 
 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 
 | - | - | - | - | - | - | - | - 
-| execute( | new | table / row | 'tablename' | with | 'rowname', optional_uniqe | and | 'other_rowname', optional_unique) 
-| execute( | delete | table / row | with | 'tablename' / 'rowname' | in | 'tablename') |
-| execute( | update | 'tablename' | where | 'rowname' = 'data' and... | with | 'other_rowname' = 'new_data' and...) | 
-| execute( | select | 'rowname' and... / * | from | 'tablename' | where | 'rowname' = 'data' and...) |
-| execute( | get | min / max / len | in / of |  'rowname' / 'tablename' | from | 'tablename') |
+| execute( | new | table / column | 'tablename' | with | ('rowname' 'unique', ...)) 
+| execute( | delete | table / column | with | 'tablename' / 'columnname' | in | 'tablename') |
+| execute( | update | 'tablename' | where | ('columnname' = 'data', ...) | with | ('other_columnname' = 'new_data', ...)) | 
+| execute( | select | 'columnname',  / * | from | 'tablename' | where | ('rowname' = 'data', ...)) |
+| execute( | get | min / max / len | in / in / of |  'columnname' / 'columnname' / 'tablename' | from | 'tablename') |
+
+exe(insert-into 'tablename' (columnname0, columnname1, ...) values (val0, val1, ...))
+
 #### Writing data
 
 ##### Tables
