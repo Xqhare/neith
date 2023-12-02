@@ -1,6 +1,9 @@
 use jisard::read_json_from_neithdb_file;
 
-use std::{io::Read, fs::File, path::{Path, PathBuf}};
+use std::{io::{Read, self, Error}, fs::File, path::{Path, PathBuf}};
+
+#[cfg(test)]
+mod tests;
 
 // This is the Json-Wizard or Jisard for short.
 mod jisard;
@@ -79,57 +82,49 @@ impl Neith {
 
     // instead of having all these functions, have a .execute() and do more of the text comprehension planned already.
     //
-    // execute(new    table                         'tablename' with               'rowname' [then optional 'unique'] and 'other_rowname')
-    // execute(new    row                           'tablename' with               'rowname' [then optional 'unique'] and 'other_rowname')
-    // execute(delete table                         with        'tablename'        )
-    // execute(delete row                           with        'rowname'          in        'tablename') -> HAS TO FAIL IF UNIQUE!!!!
-    // execute(update 'tablename'                   where       'rowname' = 'data' and other_rowname' = 'other_data'   with 'other_rowname' = 'new_data' and 'name_of_row' = 'data_new')
-    // execute(select 'rowname' and 'other_rowname' from        'tablename'        where     'a_rowname' = 'data' and 'diff_rowname' = 'diff_data')
-    // execute(select *                             from        'tablename'        where     'a_rowname' = 'data' and 'diff_rowname' = 'diff_data')
+    // execute(new table 'tablename' with ('rowname' 'unique', 'other_rowname' 'unique'))
+    // execute(new row 'tablename' with ('rowname' 'unique', 'other_rowname' 'unique'))
+    // execute(new data 'tablename' (columnname0, columnname1, ...) values (val0, val1, ...))
+    // execute(delete table with 'tablename')
+    // execute(delete row with 'rowname' in 'tablename') -> HAS TO FAIL IF UNIQUE!!!!
+    // execute(update 'tablename' where ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data'] with ('a_columnname' = 'a_data', 'other_columnname' = 'new_data'))
+    // execute(select 'rowname' and 'other_rowname' from 'tablename' where ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data'])
+    // execute(select * from 'tablename' where ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data'])
     //
     // As `get` is NOT sql syntax (at least as far as I know), I will use it here for my helper functions.
     // execute(get min in 'rowname' from 'tablename') -> Meaning the minimum value in any column entry.
     // execute(get max in 'rowname' from 'tablename') -> Meaning the maximum value in any column entry.
     // execute(get len of 'tablename') -> Meaning the amount of rows.
-    //
-    // execute commands:
-    // 1.
-    // new / delete / update / select / get
-    // 2.
-    // new / delete: table / row
-    // update: 'tablename'
-    // select: 'rowname' and 'other_rowname' / *
-    // get: command: min / max / len
-    // 3.
-    // new: 'tablename'
-    // delete: with
-    // update: where
-    // select: from
-    // get: in / of
-    // 4.
-    // new: with
-    // delete: 'tablename' / 'rowname'
-    // update: 'rowname' = 'data' and ...
-    // select: 'tablename'
-    // get: 'rowname' / 'tablename'
-    // 5.
-    // new: 'rowname'
-    // delete: !ends / in
-    // update: with
-    // select: where
-    // get: !ends / from
-    // 6.
-    // new: opt_unique / and 'other_rowname' opt_uniqe and...
-    // delete: with
-    // update: 'rowdata' = 'newdata' and...
-    // select: 'rowname' = 'data' and...
-    // get: 'tablename'
-    // 7.
-    // delete: 'other_rowname' = 'new_data' and...
-
-    pub fn mk_table(&mut self, table_name: String) {
-        let new_table = Table::new(table_name);
-        self.tables.push(new_table);
+    pub fn execute(&self, query: &str) -> Result<bool, io::Error> {
+        let binding = Into::<String>::into(query);
+        let split_query: Vec<&str> = binding.splitn(2, " ").collect::<Vec<_>>();
+        let command = split_query.clone().into_iter().take(1).collect::<String>();
+        match command.as_str() {
+            "new" => {
+                println!("NEW: {:?}", split_query);
+                return Ok(true);
+            },
+            "delete" => {
+                println!("DELETE: {:?}", query);
+                return Ok(true);
+            },
+            "update" => {
+                println!("UPDATE: {:?}", query);
+                return Ok(true);
+            },
+            "select" => {
+                println!("SELECT: {:?}", query);
+                return Ok(true);
+            },
+            "get" => {
+                println!("GET: {:?}", query);
+                return Ok(true);
+            },
+            _ => { 
+                println!("ERROR: {:?} | {:?} | {:?}", query, command, split_query);
+                return Err(Error::other("Invalid nql syntax."));
+            },
+        }
     }
 }
 // Add my own file extension, because I can! By first removing any the user might have set,
@@ -147,14 +142,10 @@ fn check_for_persistant_db(filename: PathBuf) -> bool {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::Neith;
-
-    #[test]
-    fn read_neithdb_file() {
-        let test = Neith::connect("test.neithdb");
-        let test_json = Neith::connect("test.json");
-        assert_eq!(test, test_json);
-    }
+fn main() {
+    let con = Neith::connect("test.neithdb");
+    let _ = con.execute("new testing grounds for tests");
 }
+
+
+
