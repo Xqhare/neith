@@ -42,8 +42,8 @@ It is called with the `connection(path)` function, the returned type is the conn
 For data interaction of any kind the `execute()` function is used. It takes a `&str` as an argument and returns the appropriate data, a confirmation of success or error.
 Example syntax is explained further down, this is a reference table.
 
-| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 
-| - | - | - | - | - | - | - | - 
+| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 
+| - | - | - | - | - | - | - | 
 | execute( | new | table / column / data | 'tablename' | with / with / (columnname0, columnname1, ...) | ('rowname' 'unique', ...) / ('rowname' 'unique', ...) / values (val0, val1, ...)) 
 | execute( | delete | table / column | with | 'tablename' / 'columnname' | in | 'tablename') |
 | execute( | update | 'tablename' | where | ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...] | with | ('other_columnname' = 'new_data', ...)) | 
