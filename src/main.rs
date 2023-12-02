@@ -146,6 +146,3 @@ fn main() {
     let con = Neith::connect("test.neithdb");
     let _ = con.execute("new testing grounds for tests");
 }
-
-
-
