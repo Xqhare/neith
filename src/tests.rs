@@ -44,7 +44,7 @@ fn e_test_execute_get() {
 #[test]
 fn f_test_execute_delete() {
     let con = Neith::connect("test.neithdb");
-    let _del_row = con.execute("delete row in testtable where [column1 = 4 and column4 = text]");
+    let _del_row = con.execute("delete data in testtable where [column1 = 4 and column4 = text]");
     let del_column = con.execute("delete column with column5 and column4 in testtable");
     let del_table = con.execute("delete table with testtable");
     assert!(del_column.unwrap() == del_table.unwrap());
