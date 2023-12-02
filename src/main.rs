@@ -131,28 +131,6 @@ impl Neith {
         let new_table = Table::new(table_name);
         self.tables.push(new_table);
     }
-    pub fn mk_column() {
-        unimplemented!()
-    }
-    pub fn update() {
-        unimplemented!()
-    }
-    pub fn delete() {
-        unimplemented!()
-    }
-    pub fn select() {
-        unimplemented!()
-    }
-    // min and max are for columns, len for table.
-    pub fn max() {
-        unimplemented!()
-    }
-    pub fn min() {
-        unimplemented!()
-    }
-    pub fn len() {
-        unimplemented!()
-    }
 }
 // Add my own file extension, because I can! By first removing any the user might have set,
 // and then adding on my own.
@@ -167,11 +145,6 @@ fn check_for_persistant_db(filename: PathBuf) -> bool {
         Ok(result) => return result,
         _ => return false,
     }
-}
-// I guess I just need this for debugging, as it really makes no sense in the finished library.
-fn main() {
-    let test = Neith::connect("test.neithdb");
-    println!("NeitData: {:?}", test);
 }
 
 #[cfg(test)]
