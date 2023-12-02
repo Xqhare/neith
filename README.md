@@ -31,35 +31,50 @@ Types are followed by their respective name in the API in parenthesis.
 - Lists of any type (list)
 
 ## API
-Neith has a very simple API.
+Neith has a very simple API. It uses two functions, `connect()`, as well as `execute()`.
+The first is only used once to create a connection to the database, any interaction with it is done with the `execute()` function.
 
 ### Connecting
 It is called with the `connection(path)` function, the returned type is the connection to the database.
 
-### Writing data
+### Data interaction
+For data interaction of any kind the `execute()` function is used. It takes a `&str` as an argument and returns the appropriate data, a confirmation of success or error.
+Example syntax is explained further down, this is a reference table.
 
-#### Tables
-For creating tables use the `mk_table(table_name, column_vec((column_name0, unique_bool)), (column_name1, unique_bool))` function.
+| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 
+| - | - | - | - | - | - | - | - 
+| execute( | new | table / row | 'tablename' | with | 'rowname', optional_uniqe | and | 'other_rowname', optional_unique) 
+| execute( | delete | table / row | with | 'tablename' / 'rowname' | in | 'tablename') |
+| execute( | update | 'tablename' | where | 'rowname' = 'data' and... | with | 'other_rowname' = 'new_data' and...) | 
+| execute( | select | 'rowname' and... / * | from | 'tablename' | where | 'rowname' = 'data' and...) |
+| execute( | get | min / max / len | in / of |  'rowname' / 'tablename' | from | 'tablename') |
+#### Writing data
+
+##### Tables
+
 This creates a table with the name `table_name` and the columns `column_name0` and `column_name1`. 
 Each column needs a `unique_bool` boolean demarcating if the column contents will be unique (eg. the ID).
-`mk_column` is for making columns.
-##### Notes on tables
+###### Notes on tables
 Tables cannot be renamed, nor the name or unique boolean of their columns changed.
 
-#### Rows
+##### Rows
 Updates a single column entry of a table.
-`update("{table_name} set {collum_name} = {value} where {other_collum_name} = {other_value}")`
 
-### Deleting data
+
+#### Deleting data
+
+##### Tables
+
+##### Rows
 Deletes an entire row.
 `delete("{table_name} where {collum_name} = {value}")`
 
-### Reading data
+#### Reading data
 Selects entry in specified column. * is valid for all columns.
 Reading more than one column is not supported.
 `select("{column_name} from {table_name} where {other_column_name} = {value}")`
 
-### Convinience functions:
+#### Convinience functions:
 Returns the maximum value of a given row.
 `max(collum_name)`
 Returns the minimum value of a given row.
