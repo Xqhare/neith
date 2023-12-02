@@ -76,6 +76,9 @@ impl Neith {
     // mk_table({table_name} with {collum_name}[uniqe_bool])
     //
     // I need a table, column from(String) where I decode.
+
+    // instead of having all these functions, have a .execute() and do more of the text comprehension planned already.
+
     pub fn mk_table(&mut self, table_name: String) {
         let new_table = Table::new(table_name);
         self.tables.push(new_table);
@@ -92,6 +95,7 @@ impl Neith {
     pub fn select() {
         unimplemented!()
     }
+    // min and max are for columns, len for table.
     pub fn max() {
         unimplemented!()
     }
