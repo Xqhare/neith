@@ -46,7 +46,7 @@ Example syntax is explained further down, this is a reference table.
 | - | - | - | - | - | - | - | - 
 | execute( | new | table / column | 'tablename' | with | ('rowname' 'unique', ...)) 
 | execute( | delete | table / column | with | 'tablename' / 'columnname' | in | 'tablename') |
-| execute( | update | 'tablename' | where | ('columnname' = 'data', ...) | with | ('other_columnname' = 'new_data', ...)) | 
+| execute( | update | 'tablename' | where | ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...] | with | ('other_columnname' = 'new_data', ...)) | 
 | execute( | select | 'columnname',  / * | from | 'tablename' | where | ('rowname' = 'data', ...)) |
 | execute( | get | min / max / len | in / in / of |  'columnname' / 'columnname' / 'tablename' | from | 'tablename') |
 
