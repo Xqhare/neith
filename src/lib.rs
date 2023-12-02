@@ -146,11 +146,6 @@ fn check_for_persistant_db(filename: PathBuf) -> bool {
         _ => return false,
     }
 }
-// I guess I just need this for debugging, as it really makes no sense in the finished library.
-fn main() {
-    let test = Neith::connect("test.neithdb");
-    println!("NeitData: {:?}", test);
-}
 
 #[cfg(test)]
 mod tests {
