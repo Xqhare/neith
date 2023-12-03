@@ -30,6 +30,19 @@ impl Default for ColumnData {
     }
 }
 
+impl From<(String, bool)> for Column {
+    fn from(value: (String, bool)) -> Self {
+        let name = value.0;
+        let unique = value.1;
+        let contents = ColumnData::default();
+        return Column {
+            name,
+            unique,
+            contents,
+        };
+    }
+}
+
 impl Column {
     pub fn from_neithdb_column_data(column_value: (&str, &JsonValue)) -> Self {
         let name = column_value.0.to_string();
