@@ -238,6 +238,9 @@ impl Neith {
                                             "or" => {},
                                             _ => return Err(Error::other("Invalid nql syntax.")),
                                         }
+                                    // What if entry is an and/or/not
+                                    } else if entry.1 == Data::default() {
+                                        
                                     }
                                     counter += 1;
                                 }
