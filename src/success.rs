@@ -1,6 +1,8 @@
-#[derive(Clone, PartialEq, Eq)]
+use crate::data::Data;
+
+#[derive(Clone, PartialEq)]
 pub enum Success {
     SuccessMessage(bool),
-    Result(),
+    Result(Vec<Data>),
 }
 
