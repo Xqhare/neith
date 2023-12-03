@@ -88,3 +88,45 @@ pub fn decode_single_columndata(single_val: &str) -> Result<(String, Data), Erro
     let data = Data::from(split_input.clone().skip(1).collect::<String>());
     return Ok((name, data));
 }
+
+// decode this: ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]
+//
+pub fn decode_list_conditions(value: String) -> Result<Vec<String>, Error> {
+    let split = value.split(",");
+    let mut out: Vec<String> = Vec::new();
+    for entry in split.clone() {
+        if entry.starts_with(" and") || entry.starts_with(" not") || entry.starts_with(" or") {
+            let input = entry.trim_start().splitn(2, " ");
+            let condition = input.clone().take(1).collect::<String>();
+            out.push(condition);
+            let pair = input.skip(1).collect::<String>();
+            out.push(pair);
+        } else if entry.contains(" = ") {
+            out.push(entry.to_string());
+        } else {
+            return Err(Error::other(format!("Invalid nql syntax. Only 'column = data' pairs or conditionals! {:?}", split)));
+        }
+    }
+    return Ok(out);
+}
+
+pub fn encode_list_conditions(value: Vec<String>) -> Result<Vec<(String, Data)>, Error> {
+    let mut encoding_list: Vec<(String, Data)> = Vec::new();
+    for thing in value {
+        if thing.contains(" = ") {
+            let decode_columndata = decode_single_columndata(&thing)?;
+            let name = decode_columndata.0;
+            let data = decode_columndata.1;
+            encoding_list.push((name, data));
+        } else if thing.contains("and") {
+            encoding_list.push((thing, Data::default()));
+        } else if thing.contains("not") {
+            encoding_list.push((thing, Data::default()));
+        } else if thing.contains("or") {
+            encoding_list.push((thing, Data::default()));
+        } else {
+            return Err(Error::other(format!("Invalid nql syntax. This should be either a conditional or a single_columndata = {}", thing)));
+        }
+    }
+    return Ok(encoding_list);
+}
