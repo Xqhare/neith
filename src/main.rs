@@ -215,6 +215,7 @@ impl Neith {
                                     // If data is default, it is a conditional in pos 0!
                                     if encoded_conditions[counter + 1].1 == Data::default() {
                                         let next_columndata = &encoded_conditions[counter + 2];
+                                        // maybe another fn right here?
                                         let other_name = &next_columndata.0;
                                         let other_data = &next_columndata.1;
                                         let other_search_data = self.tables[table_index].search_column_data(other_name.clone(), other_data.clone())?;
