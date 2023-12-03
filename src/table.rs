@@ -1,11 +1,13 @@
+use std::io::Error;
+
 use json::JsonValue;
 
-use crate::column::Column;
+use crate::{column::Column, success::Success, data::Data, utils::util};
 
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Table {
-    name: String,
+    pub name: String,
     columns: Vec<Column>,
 }
 
@@ -50,6 +52,43 @@ impl Table {
     pub fn new(name: String) -> Self {
         let columns: Vec<Column> = Vec::new();
         return Table {name, columns, };
+    }
+    pub fn new_columns(&mut self, value: Vec<(String, bool)>) -> Success {
+        for entry in value {
+            let new_column = Column::from(entry);
+            self.columns.push(new_column);
+        }
+        return Success::SuccessMessage(true);
+    }
+    pub fn new_data(&mut self, value: Vec<(String, Data)>) -> Result<Success, Error> {
+        let mut success = true;
+        for entry in value {
+            let columnname = entry.0;
+            let data = entry.1;
+            let column_index = self.search_for_column(columnname)?;
+            let mut column = self.columns[column_index].clone();
+            let new = column.new_data(data);
+            if new == Success::SuccessMessage(true) && success == true {
+                success = true;
+            } else {
+                success = false;
+            }
+        }
+        if success {
+            return Ok(Success::SuccessMessage(true));
+        } else {
+            return Err(Error::other("Writing data went wrong!"));
+        }
+    }
+    pub fn search_for_column(&self, columnname: String) -> Result<usize, Error> {
+        let mut counter: usize = 0;
+        for entry in &self.columns {
+            if entry.name.eq(&columnname) {
+                return Ok(counter);
+            }
+            counter += 1;
+        }
+        return Err(Error::other(format!("Table with name {} not found.", columnname)));
     }
 }
 
