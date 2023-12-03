@@ -25,7 +25,7 @@ Hierarchy
 ## Datatypes
 It supports only basic datatypes, floating point numbers, booleans, strings, as well as Lists.
 Signed and unsigned intergers are excluded for the sake of simplicity, ease of use and a smaller footprint.
-If you really need to use them, Neith is not for you.
+If you really need to use them, Neith is probably not for you.
 
 ### Types:
 Types are followed by their respective name in the API in parenthesis.
@@ -35,9 +35,10 @@ Types are followed by their respective name in the API in parenthesis.
 - Lists of any type (list) -> wrapped in (), e.g. (example, 1, true)
 
 ## API
-Neith has a very simple API. It uses two functions, `connect()`, as well as `execute()`.
+Neith has a very simple API. It uses three functions, `connect()`, `execute()`, as well as `close()`.
 The first is only used once to create a connection to the database, any interaction with it is done with the `execute()` function.
 The `execute()` function uses Neithql or nql, a very simple and basic implementation of some sql syntax.
+With the last function you can save the current state of the database to disc. If you are not running in ram-mode that is.
 
 ### Connecting
 It is called with the `connection(path)` function, the returned type is the connection to the database.
