@@ -1,6 +1,6 @@
 use std::{io::{self, Error}, path::{Path, PathBuf}};
 
-use crate::utils::util::{*};
+use crate::{utils::util::{*}, data::Data};
 
 #[cfg(test)]
 mod tests;
@@ -200,6 +200,47 @@ impl Neith {
                             let command_lvl5 = strip_leading_word(command_lvl4.1);
                             if command_lvl5.0.as_str().contains("where"){
                                 let conditions = command_lvl5.1;
+                                let decoded_conditions = decode_list_conditions(conditions)?;
+                                // new fn
+                                let encoded_conditions = encode_list_conditions(decoded_conditions)?;
+                                // from here somewhere -> takes in list_conditions and returns
+                                // finished search vector.
+                                let mut found_data: Vec<(usize, Data)> = Vec::new();
+                                let mut counter: usize = 0;
+                                for entry in &encoded_conditions {
+                                    let name = &entry.0;
+                                    let data = &entry.1;
+                                    let table_index = self.search_for_table(tablename.clone())?;
+                                    let search_data = self.tables[table_index].search_column_data(name.clone(), data.clone())?;
+                                    // If data is default, it is a conditional in pos 0!
+                                    if encoded_conditions[counter + 1].1 == Data::default() {
+                                        let next_columndata = &encoded_conditions[counter + 2];
+                                        let other_name = &next_columndata.0;
+                                        let other_data = &next_columndata.1;
+                                        let other_search_data = self.tables[table_index].search_column_data(other_name.clone(), other_data.clone())?;
+                                        match encoded_conditions[counter + 1].0.as_str() {
+                                            "and" => {
+                                                for entry in search_data {
+                                                    let index = entry.0;
+                                                    let data = entry.1;
+                                                    for thing in &other_search_data {
+                                                        let other_index = thing.0;
+                                                        let other_data = &thing.1;
+                                                        if index == other_index {
+                                                            // AND SEARCH HIT
+                                                            found_data.push((index, data.clone()));
+                                                            found_data.push((other_index, other_data.clone()));
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "not" => {},
+                                            "or" => {},
+                                            _ => return Err(Error::other("Invalid nql syntax.")),
+                                        }
+                                    }
+                                    counter += 1;
+                                }
                             } else {
                                 return Err(Error::other("Invalid nql syntax."));
                             }
