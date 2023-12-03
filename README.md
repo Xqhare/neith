@@ -144,4 +144,7 @@ let get_min = con.execute("get min in column1 from testtable");
 let get_max = con.execute("get max on column1 from testtable");
 let get_len = con.execute("get len of testtable");
 ```
+#### Saving data to disc
 
+If Neith is set up using the `connect()` function, it will read any data found at the specified path, and do any operations on the data in ram. Ending the programm without `.close()`-ing the connection, will not save the data from ram to disc, and will behave like a Neith instance in `ram-mode`, just without some benefits of the flag and some more overhead.
+After a connection has been closed, it has to be reopened using the `connect()` function - this is ressource intensive, so only save during runtime if absolutely neccesarry.
