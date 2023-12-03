@@ -1,17 +1,17 @@
 use json::JsonValue;
 
-use crate::data::Data;
+use crate::{data::Data, success::Success};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Column {
-    name: String,
-    unique: bool,
-    contents: ColumnData,
+    pub name: String,
+    pub unique: bool,
+    pub contents: ColumnData,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ColumnData {
-    all_row_data: Vec<Data>,
+    pub all_row_data: Vec<Data>,
 }
 
 impl Default for Column {
@@ -61,5 +61,15 @@ impl Column {
             }
         }
         return Column{name, unique, contents: ColumnData { all_row_data}};
+    }
+    pub fn new_data(&mut self, value: Data) -> Success {
+        return self.contents.new_data(value);
+    }
+}
+
+impl ColumnData {
+    pub fn new_data(&mut self, value: Data) -> Success {
+        self.all_row_data.push(value);
+        return Success::SuccessMessage(true);
     }
 }
