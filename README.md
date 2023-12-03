@@ -149,3 +149,9 @@ let get_len = con.execute("get len of testtable");
 
 If Neith is set up using the `connect()` function, it will read any data found at the specified path, and do any operations on the data in ram. Ending the programm without `.close()`-ing the connection, will not save the data from ram to disc, and will behave like a Neith instance in `ram-mode`, just without some benefits of the flag and some more overhead.
 After a connection has been closed, it has to be reopened using the `connect()` function - this is ressource intensive, so only save during runtime if absolutely neccesarry.
+
+```
+let con = Neith::connect("test.neithdb");
+con.close();
+```
+This opens and immmediatly closes (or saves the state of) neith.
