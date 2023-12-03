@@ -28,6 +28,24 @@ impl From<(&str, &JsonValue)> for Table {
     }
 }
 
+impl From<(String, Vec<(String, bool)>)> for Table {
+    fn from(value: (String, Vec<(String, bool)>)) -> Self {
+        let tablename = value.0;
+        let columns_in = value.1;
+        let mut columns: Vec<Column> = Vec::new();
+        for entry in columns_in {
+            let name = entry.0;
+            let unique = entry.1;
+            let new_column = Column::from((name, unique));
+            columns.push(new_column);
+        }
+        return Table {
+            name: tablename,
+            columns,
+        };
+    }
+}
+
 impl Table {
     pub fn new(name: String) -> Self {
         let columns: Vec<Column> = Vec::new();
