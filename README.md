@@ -32,7 +32,7 @@ Types are followed by their respective name in the API in parenthesis.
 - Floats (float)
 - Booleans (bool)
 - Strings (string)
-- Lists of any type (list)
+- Lists of any type (list) -> wrapped in (), e.g. (example, 1, true)
 
 ## API
 Neith has a very simple API. It uses two functions, `connect()`, as well as `execute()`.
@@ -44,15 +44,33 @@ It is called with the `connection(path)` function, the returned type is the conn
 
 ### Data interaction
 For data interaction of any kind the `execute()` function is used. It takes a `&str` as an argument and returns the appropriate data, a confirmation of success or error.
-Example syntax is explained further down, this is a reference table.
+Example syntax is explained further down.
+
+#### Nsql reference table
 
 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 
 | - | - | - | - | - | - | - | 
-| execute( | new | table / column / data | 'tablename' | with / with / ('other_columnname' = 'new_data', ...) | ('columnname' 'unique', ...) / ('columnname' 'unique', ...)) 
-| execute( | delete | table / column / data | with / with / in | 'tablename' / 'columnname' / 'tablename' | in / where | 'tablename' / ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]) |
-| execute( | update | 'tablename' | where | ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...] | with | ('other_columnname' = 'new_data', ...)) | 
-| execute( | select | (columnname0, columnname1, ...)  / * | from | 'tablename' | where | ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]) |
-| execute( | get | min / max / len | in / in / of |  'columnname' / 'columnname' / 'tablename' | from | 'tablename') |
+| execute( | new | table / column / data | 'tablename' | with / with / ('other_columnname' = 'new_data', ...)!) | ('columnname' 'unique', ...)!) / ('columnname' 'unique', ...)!) 
+| execute( | delete | table / column / data | with / with / in | 'tablename'!) / 'columnname' / 'tablename' | in / where | 'tablename'!) / ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]!) |
+| execute( | update | 'tablename' | where | ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...] | with | ('other_columnname' = 'new_data', ...)!) | 
+| execute( | select | (columnname0, columnname1, ...)  OR * | from | 'tablename' | where | ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]!) |
+| execute( | get | min / max / len | in / in / of |  'columnname' / 'columnname' / 'tablename'!) | from / from | 'tablename'!) / 'tablename'!) |
+
+###### Notes on using the reference table
+The table is read left to right, here the example for any `new` nql syntax:
+
+By reading the table left to right in the first row, we start with 'execute(' followed by 'new'. The next field has 3 possibilites, 'table', 'column' or 'data'. Please note that the order of the elements does not change, so syntax need for 'coulumn' will always be second in the list, as long as any syntax is applicable.
+With this in mind, we know that next we enter the 'tablename', and then choose the right next part in the correct place in the list. 
+E.g. 'data' was choosen, it is third in the list, so now '('other_columnname' = 'new_data', ...)!)' has to come next. The '!)' marks the end of the command, and is NOT to be typed.
+It servers as a marker for ease of use during reference.
+
+```
+let mut con = Neith::connect("test.neithdb");
+let new_table = con.execute("new table testtable with (column1 true, column2 false, column3 false)");
+let new_columns = con.execute("new column testtable with (column4 false, column5 false)");
+let new_data_column1 = con.execute("new data testtable (column1 = 1, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
+let new_data_column2 = con.execute("new data testtable (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
+```
 
 #### Writing data
 
@@ -78,7 +96,7 @@ This extends the created `testable` with `column4` and `column5`.
 ```
 let con = Neith::connect("test.neithdb");
 let update1 = con.execute("update testtable where [column2 = 1 and column4 = text] with (column3 = true)");
-let update2 = con.execute("update testtable where [column2 = -2.04 or column2 = 1] with (column3 = false)").unwrap();
+let update2 = con.execute("update testtable where [column2 = -2.04 or column2 = 1] with (column3 = false)");
 let update3 = con.execute("update testtable where [column4 = text not column2 = -2.04] with (column5 = (-1, 1.04, true, test text))");
 ```
 
