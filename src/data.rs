@@ -11,6 +11,14 @@ pub enum Data {
     String(String),
 }
 
+impl Default for Data {
+    fn default() -> Self {
+        let vect: Vec<Data> = Vec::new();
+        let out = Data::List(vect);
+        return out;
+    }
+}
+
 impl From<String> for Data {
     fn from(value: String) -> Self {
         let bool_test = value.parse::<bool>();
