@@ -1,5 +1,3 @@
-use jisard::read_json_from_neithdb_file;
-
 use std::{io::{self, Error}, path::{Path, PathBuf}};
 
 use crate::utils::util::{*};
@@ -7,8 +5,7 @@ use crate::utils::util::{*};
 #[cfg(test)]
 mod tests;
 
-// This is the Json-Wizard or Jisard for short.
-mod jisard;
+mod success;
 // The column representation
 mod column;
 // The table representation
@@ -19,6 +16,9 @@ mod data;
 mod utils;
 
 use crate::table::Table;
+use crate::utils::jisard;
+use jisard::read_json_from_neithdb_file;
+use success::Success;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Neith {
@@ -113,7 +113,6 @@ impl Neith {
                 match command_lvl2.0.as_str() {
                     "table" => {
                         let command_lvl4 = strip_leading_word(command_lvl3.1.clone());
-                        println!("cmd4: {:?}", command_lvl4);
                         if command_lvl4.0.as_str().contains("with") {
                             let columns = decode_columnmaker(command_lvl4.1).unwrap();
                             let answ = Table::from((tablename, columns));
@@ -125,16 +124,35 @@ impl Neith {
                         }
                     },
                     "column" => {
-                        let command_lvl3 = strip_leading_word(command_lvl2.1);
-                        if command_lvl3.0.as_str() == "with" {
+                        let command_lvl4 = strip_leading_word(command_lvl3.1.clone());
+                        if command_lvl4.0.as_str().contains("with") {
+                            let columns = decode_columnmaker(command_lvl4.1).unwrap();
+                            let table_index = self.search_for_table(tablename)?;
+                            let answ = self.tables[table_index].new_columns(columns);
+                            // Successful decoding of syntax!
+                            if answ == Success::SuccessMessage(true) {
+                                return Ok(true);
+                            } else {
+                                return Err(Error::other("Invalid nql syntax."));
+                            }
                         } else {
                             return Err(Error::other("Invalid nql syntax."));
                         }
                     },
-                    "data" => {},
+                    "data" => {
+                        let command_lvl4 = command_lvl3.1.clone();
+                        let decoded = decode_list_columndata(command_lvl4).unwrap();
+                        let table_index = self.search_for_table(tablename)?;
+                        let answ = self.tables[table_index].new_data(decoded)?;
+                        if answ == Success::SuccessMessage(true) {
+                            return Ok(true);
+                        } else {
+                            return Err(Error::other("Invalid nql syntax."));
+                        }
+
+                    },
                     _ => return Err(Error::other("Invalid nql syntax.")),
                 }
-                return Ok(true);
             },
             "delete" => {
                 /* match command_level2.0.as_str() {
@@ -164,12 +182,27 @@ impl Neith {
             },
         }
     }
-    
+    fn search_for_table(&self, tablename: String) -> Result<usize, Error> {
+        let mut counter: usize = 0;
+        for entry in &self.tables {
+            if entry.name.eq(&tablename) {
+                return Ok(counter);
+            }
+            counter += 1;
+        }
+        return Err(Error::other(format!("Table with name {} not found.", tablename)));
+    }
 }
 
 
 fn main() {
-    let con = Neith::connect("test.neithdb");
+    let mut con = Neith::connect("test.neithdb");
     let new_table = con.execute("new table testtable with (column1 true, column2 false, column3 false)");
-    println!("{:?}", new_table)
+    let new_columns = con.execute("new column testtable with (column4 false, column5 false)");
+    let new_data_column1 = con.execute("new data testtable (column1 = 1, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
+    let new_data_column2 = con.execute("new data testtable (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
+    println!("{:?} | {:?}", new_table, new_columns);
+    println!("{:?}", con.tables);
+    println!("---");
+    println!("{:?} | {:?}", new_data_column1, new_data_column2)
 }
