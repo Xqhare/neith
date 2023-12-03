@@ -8,7 +8,7 @@ use crate::{column::Column, success::Success, data::Data, utils::util};
 #[derive(Clone, Debug, PartialEq)]
 pub struct Table {
     pub name: String,
-    columns: Vec<Column>,
+    pub columns: Vec<Column>,
 }
 
 impl Default for Table {
@@ -94,6 +94,23 @@ impl Table {
         let column_index = self.search_for_column(columnname)?;
         let _ = self.columns.remove(column_index);
         return Ok(Success::SuccessMessage(true));
+    }
+    /// Returns the index of the data in the column.
+    pub fn search_column_data(&self, columnname: String, data: Data) -> Result<Vec<(usize, Data)>, Error> {
+        let column_index = self.search_for_column(columnname)?;
+        let mut out: Vec<(usize, Data)> = Vec::new();
+        let mut counter: usize = 0;
+        for entry in self.columns[column_index].contents.all_row_data.clone() {
+            if entry == data {
+                out.push((counter, entry));
+            }
+            counter += 1;
+        }
+        if out.len() > 0 {
+            return Ok(out);
+        } else {
+            return Err(Error::other("No data found!"));
+        }
     }
 }
 
