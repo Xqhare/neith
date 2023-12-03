@@ -174,16 +174,36 @@ impl Neith {
                     "column" => {
                         let command_lvl3 = strip_leading_word(command_lvl2.1.clone());
                         if command_lvl3.0.as_str().contains("with") {
+                            let command_lvl4 = strip_leading_word(command_lvl3.1);
+                            let columnname = command_lvl4.0;
+                            let command_lvl5 = strip_leading_word(command_lvl4.1);
+                            if command_lvl5.0.as_str().contains("in") {
+                                let tablename = command_lvl5.1;
+                                let answ = self.delete_column(tablename, columnname);
+                                if answ.is_ok() {
+                                    return Ok(true);
+                                } else {
+                                    return Err(Error::other("Invalid nql syntax."));
+                                }
+                            } else {
+                                return Err(Error::other("Invalid nql syntax."));
+                            }
                         } else {
-                            let columnname = command_lvl3.1;
                             return Err(Error::other("Invalid nql syntax."));
                         }
                     },
                     "data" => {
                         let command_lvl3 = strip_leading_word(command_lvl2.1.clone());
                         if command_lvl3.0.as_str().contains("in") {
+                            let command_lvl4 = strip_leading_word(command_lvl3.1);
+                            let tablename = command_lvl4.0;
+                            let command_lvl5 = strip_leading_word(command_lvl4.1);
+                            if command_lvl5.0.as_str().contains("where"){
+                                let conditions = command_lvl5.1;
+                            } else {
+                                return Err(Error::other("Invalid nql syntax."));
+                            }
                         } else {
-                            let tablename = command_lvl3.1;
                             return Err(Error::other("Invalid nql syntax."));
                         }
                     },
@@ -224,6 +244,15 @@ impl Neith {
         let table_index = self.search_for_table(tablename)?;
         let _ = self.tables.remove(table_index);
         return Ok(Success::SuccessMessage(true))
+    }
+    fn delete_column(&mut self, tablename: String, columnname: String) -> Result<Success, Error> {
+        let table_index = self.search_for_table(tablename)?;
+        let answ = self.tables[table_index].delete_column(columnname)?;
+        if answ == Success::SuccessMessage(true) {
+            return Ok(Success::SuccessMessage(true));
+        } else {
+            return Err(Error::other("Deletion error!"));
+        }
     }
 }
 
