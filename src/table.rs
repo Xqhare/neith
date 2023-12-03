@@ -90,6 +90,11 @@ impl Table {
         }
         return Err(Error::other(format!("Table with name {} not found.", columnname)));
     }
+    pub fn delete_column(&mut self, columnname: String) -> Result<Success, Error> {
+        let column_index = self.search_for_column(columnname)?;
+        let _ = self.columns.remove(column_index);
+        return Ok(Success::SuccessMessage(true));
+    }
 }
 
 
