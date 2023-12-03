@@ -97,11 +97,18 @@ impl Neith {
     // execute(get len of 'tablename') -> Meaning the amount of rows.
     pub fn execute(&self, query: &str) -> Result<bool, io::Error> {
         let binding = Into::<String>::into(query);
-        let split_query: Vec<&str> = binding.splitn(2, " ").collect::<Vec<_>>();
-        let command = split_query.clone().into_iter().take(1).collect::<String>();
-        match command.as_str() {
+        let command = strip_leading_word(binding);
+        match command.0.as_str() {
             "new" => {
-                println!("NEW: {:?}", split_query);
+                println!("1.cmd == {:?}", command.clone());
+                let command_level2 = strip_leading_word(command.1);
+                // match command_level2.0.as_str() {}
+
+
+                let command_split = command_level2.1;
+                let level2_cmd = command_level2.0;
+                println!("2.split: {:?}", command_split);
+                println!("2.cmd: {:?}", level2_cmd);
                 return Ok(true);
             },
             "delete" => {
@@ -121,11 +128,19 @@ impl Neith {
                 return Ok(true);
             },
             _ => { 
-                println!("ERROR: {:?} | {:?} | {:?}", query, command, split_query);
+                println!("ERROR: {:?} | {:?} | {:?}", query, command.0, command.1);
                 return Err(Error::other("Invalid nql syntax."));
             },
         }
     }
+    
+}
+// write a decoder for every code step 
+fn strip_leading_word(to_strip: String) -> (String, String) {
+    let split_query: Vec<&str> = to_strip.splitn(2, " ").collect::<Vec<_>>();
+    let command = split_query.clone().into_iter().take(1).collect::<String>();
+    let remainder = split_query.clone().into_iter().skip(1).collect::<String>();
+    return (command.clone(), remainder);
 }
 // Add my own file extension, because I can! By first removing any the user might have set,
 // and then adding on my own.
@@ -144,5 +159,6 @@ fn check_for_persistant_db(filename: PathBuf) -> bool {
 
 fn main() {
     let con = Neith::connect("test.neithdb");
-    let _ = con.execute("new testing grounds for tests");
+    let new_table = con.execute("new table testtable with (column1 true, column2 false, column3 false)");
+    println!("{:?}", new_table)
 }
