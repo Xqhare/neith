@@ -61,7 +61,7 @@ The table is read left to right, here the example for any `new` nql syntax:
 
 By reading the table left to right in the first row, we start with 'execute(' followed by 'new'. The next field has 3 possibilites, 'table', 'column' or 'data'. Please note that the order of the elements does not change, so syntax need for 'coulumn' will always be second in the list, as long as any syntax is applicable.
 With this in mind, we know that next we enter the 'tablename', and then choose the right next part in the correct place in the list. 
-E.g. 'data' was choosen, it is third in the list, so now '('other_columnname' = 'new_data', ...)!)' has to come next. The '!)' marks the end of the command, and is NOT to be typed.
+E.g. 'data' was choosen, it is third in the list, so now '('other_columnname' = 'new_data', ...)!)' has to come next. The '!)' marks the end of the command, and the ! is NOT to be typed.
 It servers as a marker for ease of use during reference.
 
 ```
