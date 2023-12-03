@@ -1,6 +1,8 @@
 use jisard::read_json_from_neithdb_file;
 
-use std::{io::{Read, self, Error}, fs::File, path::{Path, PathBuf}};
+use std::{io::{self, Error}, path::{Path, PathBuf}};
+
+use crate::utils::util::{*};
 
 #[cfg(test)]
 mod tests;
@@ -13,6 +15,8 @@ mod column;
 mod table;
 // The general data representation
 mod data;
+// My util module.
+mod utils;
 
 use crate::table::Table;
 
@@ -95,23 +99,50 @@ impl Neith {
     // execute(get min in 'rowname' from 'tablename') -> Meaning the minimum value in any column entry.
     // execute(get max in 'rowname' from 'tablename') -> Meaning the maximum value in any column entry.
     // execute(get len of 'tablename') -> Meaning the amount of rows.
-    pub fn execute(&self, query: &str) -> Result<bool, io::Error> {
+    //
+    // For returning the query or a success message, I could wrap another custom wrapper in Result,
+    // e.g. Result<NeithAnswer, io::Error>
+    pub fn execute(&mut self, query: &str) -> Result<bool, io::Error> {
         let binding = Into::<String>::into(query);
-        let command = strip_leading_word(binding);
-        match command.0.as_str() {
+        let command_lvl1 = strip_leading_word(binding);
+        match command_lvl1.0.as_str() {
             "new" => {
-                println!("1.cmd == {:?}", command.clone());
-                let command_level2 = strip_leading_word(command.1);
-                // match command_level2.0.as_str() {}
-
-
-                let command_split = command_level2.1;
-                let level2_cmd = command_level2.0;
-                println!("2.split: {:?}", command_split);
-                println!("2.cmd: {:?}", level2_cmd);
+                let command_lvl2 = strip_leading_word(command_lvl1.1);
+                let command_lvl3 = strip_leading_word(command_lvl2.1.clone());
+                let tablename =  command_lvl3.0.clone();
+                match command_lvl2.0.as_str() {
+                    "table" => {
+                        let command_lvl4 = strip_leading_word(command_lvl3.1.clone());
+                        println!("cmd4: {:?}", command_lvl4);
+                        if command_lvl4.0.as_str().contains("with") {
+                            let columns = decode_columnmaker(command_lvl4.1).unwrap();
+                            let answ = Table::from((tablename, columns));
+                            self.tables.push(answ);
+                            // Successful decoding of syntax!
+                            return Ok(true);
+                        } else {
+                            return Err(Error::other("Invalid nql syntax."));
+                        }
+                    },
+                    "column" => {
+                        let command_lvl3 = strip_leading_word(command_lvl2.1);
+                        if command_lvl3.0.as_str() == "with" {
+                        } else {
+                            return Err(Error::other("Invalid nql syntax."));
+                        }
+                    },
+                    "data" => {},
+                    _ => return Err(Error::other("Invalid nql syntax.")),
+                }
                 return Ok(true);
             },
             "delete" => {
+                /* match command_level2.0.as_str() {
+                    "table" => {},
+                    "column" => {},
+                    "data" => {},
+                    _ => return Err(Error::other("Invalid nql syntax.")),
+                } */
                 println!("DELETE: {:?}", query);
                 return Ok(true);
             },
@@ -128,34 +159,14 @@ impl Neith {
                 return Ok(true);
             },
             _ => { 
-                println!("ERROR: {:?} | {:?} | {:?}", query, command.0, command.1);
+                println!("ERROR: {:?} | {:?} | {:?}", query, command_lvl1.0, command_lvl1.1);
                 return Err(Error::other("Invalid nql syntax."));
             },
         }
     }
     
 }
-// write a decoder for every code step 
-fn strip_leading_word(to_strip: String) -> (String, String) {
-    let split_query: Vec<&str> = to_strip.splitn(2, " ").collect::<Vec<_>>();
-    let command = split_query.clone().into_iter().take(1).collect::<String>();
-    let remainder = split_query.clone().into_iter().skip(1).collect::<String>();
-    return (command.clone(), remainder);
-}
-// Add my own file extension, because I can! By first removing any the user might have set,
-// and then adding on my own.
-fn canonize_path(value: PathBuf) -> PathBuf {
-        let mut path = value;
-        path.set_extension("");
-        path.set_extension("neithdb");
-        return path;
-}
-fn check_for_persistant_db(filename: PathBuf) -> bool {
-    match filename.try_exists() {
-        Ok(result) => return result,
-        _ => return false,
-    }
-}
+
 
 fn main() {
     let con = Neith::connect("test.neithdb");
