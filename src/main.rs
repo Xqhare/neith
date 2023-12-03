@@ -155,12 +155,40 @@ impl Neith {
                 }
             },
             "delete" => {
-                /* match command_level2.0.as_str() {
-                    "table" => {},
-                    "column" => {},
-                    "data" => {},
+                let command_lvl2 = strip_leading_word(command_lvl1.1);
+                match command_lvl2.0.as_str() {
+                    "table" => {
+                        let command_lvl3 = strip_leading_word(command_lvl2.1.clone());
+                        if command_lvl3.0.as_str().contains("with") {
+                            let tablename = command_lvl3.1;
+                            let answ = self.delete_table(tablename);
+                            if answ.is_ok() {
+                                return Ok(true);
+                            } else {
+                                return Err(Error::other("Invalid nql syntax."));
+                            }
+                        } else {
+                            return Err(Error::other("Invalid nql syntax."));
+                        }
+                    },
+                    "column" => {
+                        let command_lvl3 = strip_leading_word(command_lvl2.1.clone());
+                        if command_lvl3.0.as_str().contains("with") {
+                        } else {
+                            let columnname = command_lvl3.1;
+                            return Err(Error::other("Invalid nql syntax."));
+                        }
+                    },
+                    "data" => {
+                        let command_lvl3 = strip_leading_word(command_lvl2.1.clone());
+                        if command_lvl3.0.as_str().contains("in") {
+                        } else {
+                            let tablename = command_lvl3.1;
+                            return Err(Error::other("Invalid nql syntax."));
+                        }
+                    },
                     _ => return Err(Error::other("Invalid nql syntax.")),
-                } */
+                }
                 println!("DELETE: {:?}", query);
                 return Ok(true);
             },
@@ -191,6 +219,11 @@ impl Neith {
             counter += 1;
         }
         return Err(Error::other(format!("Table with name {} not found.", tablename)));
+    }
+    fn delete_table(&mut self, tablename: String) -> Result<Success, Error> {
+        let table_index = self.search_for_table(tablename)?;
+        let _ = self.tables.remove(table_index);
+        return Ok(Success::SuccessMessage(true))
     }
 }
 
