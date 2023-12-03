@@ -48,7 +48,7 @@ Example syntax is explained further down, this is a reference table.
 
 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 
 | - | - | - | - | - | - | - | 
-| execute( | new | table / column / data | 'tablename' | with / with / (columnname0, columnname1, ...) OR ('other_columnname' = 'new_data', ...) | ('columnname' 'unique', ...) / ('columnname' 'unique', ...) / values (val0, val1, ...)) 
+| execute( | new | table / column / data | 'tablename' | with / with / ('other_columnname' = 'new_data', ...) | ('columnname' 'unique', ...) / ('columnname' 'unique', ...)) 
 | execute( | delete | table / column / data | with / with / in | 'tablename' / 'columnname' / 'tablename' | in / where | 'tablename' / ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]) |
 | execute( | update | 'tablename' | where | ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...] | with | ('other_columnname' = 'new_data', ...)) | 
 | execute( | select | (columnname0, columnname1, ...)  / * | from | 'tablename' | where | ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]) |
@@ -88,8 +88,8 @@ Updates a single column entry of a table.
 
 ```
 let con = Neith::connect("test.neithdb");
-let new_data_column1 = con.execute("new data testtable (column1, column2, column3, column4, column5) (1, -2.04, true, text, (1.04, 2, false, more text))");
-let new_data_column2 = con.execute("new data testtable (column1, column2, column3, column4, column5) (2, -2.04, true, text, (1.04, 2, false, more text))");
+let new_data_column1 = con.execute("new data testtable (column1 = 1, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
+let new_data_column2 = con.execute("new data testtable (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
 let new_data_column3 = con.execute("new data testtable (column1 = 3, column2 = 1, column4 = text)");
 let new_data_column4 = con.execute("new data testtable (column1 = 4, column2 = 1, column4 = text)");
 ```
