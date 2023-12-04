@@ -60,15 +60,22 @@ impl Table {
         }
         return Success::SuccessMessage(true);
     }
+    pub fn delete_data(&mut self, indicies: Vec<usize>) -> Result<Success, Error> {
+        for index in indicies {
+            for column in &mut self.columns {
+                column.delete_data(index);
+            }
+        }
+        return Ok(Success::SuccessMessage(true));
+    }
     pub fn new_data(&mut self, value: Vec<(String, Data)>) -> Result<Success, Error> {
         let mut success = true;
         for entry in value {
             let columnname = entry.0;
             let data = entry.1;
             let column_index = self.search_for_column(columnname)?;
-            let mut column = self.columns[column_index].clone();
-            let new = column.new_data(data);
-            if new == Success::SuccessMessage(true) && success == true {
+            let column = self.columns[column_index].new_data(data);
+            if column == Success::SuccessMessage(true) && success == true {
                 success = true;
             } else {
                 success = false;
@@ -96,13 +103,13 @@ impl Table {
         return Ok(Success::SuccessMessage(true));
     }
     /// Returns the index of the data in the column.
-    pub fn search_column_data(&self, columnname: String, data: Data) -> Result<Vec<(usize, Data)>, Error> {
+    pub fn search_column_data(&self, columnname: String, data: Data) -> Result<Vec<usize>, Error> {
         let column_index = self.search_for_column(columnname)?;
-        let mut out: Vec<(usize, Data)> = Vec::new();
+        let mut out: Vec<usize> = Vec::new();
         let mut counter: usize = 0;
         for entry in self.columns[column_index].contents.all_row_data.clone() {
             if entry == data {
-                out.push((counter, entry));
+                out.push(counter);
             }
             counter += 1;
         }
