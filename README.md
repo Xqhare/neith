@@ -40,6 +40,11 @@ The first is only used once to create a connection to the database, any interact
 The `execute()` function uses Neithql or nql, a very simple and basic implementation of some sql syntax.
 With the last function you can save the current state of the database to disc. If you are not running in ram-mode that is.
 
+Note that Neith always returns something for each call. In most operations this is a simple success message containg a `true` boolean.
+The boolean wrapped by the `SuccessMessage` type does not matter; 
+It can also contain the data queried, or an Error encountered during execution.
+For this reason, it is recommended that you bind every query to a variable, marking it with `_` if you want to ignore the returned value.
+
 ### Connecting
 It is called with the `connection(path)` function, the returned type is the connection to the database.
 
@@ -52,9 +57,9 @@ Example syntax is explained further down.
 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 
 | - | - | - | - | - | - | - | 
 | execute( | new | table / column / data | 'tablename' | with / with / ('other_columnname' = 'new_data', ...)!) | ('columnname' 'unique', ...)!) / ('columnname' 'unique', ...)!) 
-| execute( | delete | table / column / data | with / with / in | 'tablename'!) / 'columnname' / 'tablename' | in / where | 'tablename'!) / ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]!) |
-| execute( | update | 'tablename' | where | ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...] | with | ('other_columnname' = 'new_data', ...)!) | 
-| execute( | select | (columnname0, columnname1, ...)  OR * | from | 'tablename' | where | ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]!) |
+| execute( | delete | table / column / data | with / with / in | 'tablename'!) / 'columnname' / 'tablename' | in / where | 'tablename'!) / ['columnname' = 'data', {and/not/or/xor} 'other_columnname' = 'other data', ...]!) |
+| execute( | update | 'tablename' | where | ['columnname' = 'data', {and/not/or/xor} 'other_columnname' = 'other data', ...] | with | ('other_columnname' = 'new_data', ...)!) | 
+| execute( | select | (columnname0, columnname1, ...)  OR * | from | 'tablename' | where | ['columnname' = 'data', {and/not/or/xor} 'other_columnname' = 'other data', ...]!) |
 | execute( | get | min / max / len | in / in / of |  'columnname' / 'columnname' / 'tablename'!) | from / from | 'tablename'!) / 'tablename'!) |
 
 ###### Notes on using the reference table
@@ -160,7 +165,14 @@ WIP BELOW
 
 ### "Job-History"-Table
 
-Neih comes with a "job-history" table that can be turned off during connection creation. This table saves the following:
+As this feature is experimental, it is off by default.
+It can be turned on by: 
+```
+let con = Neith::connect("test.neithdb");
+let 
+```
+
+Neih comes with a 'job-history' table that can be turned on during connection creation. This table saves the following:
 
 - id of job
 - hash of command as a string
@@ -172,4 +184,4 @@ Neih comes with a "job-history" table that can be turned off during connection c
 
 This table can be queried just like any other table. You can change the contents too, if you wish. Although that really isn't recommended.
 
-Saving of this data can create unwanted overhead of ram and cpu usage, so this fearure can be turned off.
+As saving of this data can create unwanted ram and cpu overhead, the fearure is, by default, turned off.
