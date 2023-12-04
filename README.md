@@ -155,3 +155,21 @@ let con = Neith::connect("test.neithdb");
 con.close();
 ```
 This opens and immmediatly closes (or saves the state of) neith.
+
+WIP BELOW
+
+### "Job-History"-Table
+
+Neih comes with a "job-history" table that can be turned off during connection creation. This table saves the following:
+
+- id of job
+- hash of command as a string
+- number of columns searched (if any)
+- number of rows searched (if any) 
+- number of rows changed (if any)
+- created (timestamp with timezone)
+(maybe) -execution duration
+
+This table can be queried just like any other table. You can change the contents too, if you wish. Although that really isn't recommended.
+
+Saving of this data can create unwanted overhead of ram and cpu usage, so this fearure can be turned off.
