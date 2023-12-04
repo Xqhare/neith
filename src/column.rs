@@ -65,11 +65,18 @@ impl Column {
     pub fn new_data(&mut self, value: Data) -> Success {
         return self.contents.new_data(value);
     }
+    pub fn delete_data(&mut self, index: usize) -> Success {
+        return self.contents.delete_data(index);
+    }
 }
 
 impl ColumnData {
     pub fn new_data(&mut self, value: Data) -> Success {
         self.all_row_data.push(value);
+        return Success::SuccessMessage(true);
+    }
+    pub fn delete_data(&mut self, index: usize) -> Success {
+        let _ = self.all_row_data.remove(index);
         return Success::SuccessMessage(true);
     }
 }
