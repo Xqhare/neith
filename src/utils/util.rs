@@ -1,4 +1,4 @@
-use std::{path::PathBuf, io::Error};
+use std::{path::PathBuf, io::Error, hash::Hash, collections::{HashMap, hash_map::Entry}};
 
 use crate::{data::Data, success::Success};
 
@@ -113,20 +113,89 @@ pub fn decode_list_conditions(value: String) -> Result<Vec<String>, Error> {
 pub fn encode_list_conditions(value: Vec<String>) -> Result<Vec<(String, Data)>, Error> {
     let mut encoding_list: Vec<(String, Data)> = Vec::new();
     for thing in value {
-        if thing.contains(" = ") {
-            let decode_columndata = decode_single_columndata(&thing)?;
+        let mut cleaned_thing = thing.clone();
+        if thing.contains("[") {
+            let temp = thing.replace("[", "");
+            cleaned_thing = temp;
+        } else if thing.contains("]") {
+            let temp = thing.replace("]", "");
+            cleaned_thing = temp;
+        }
+        if cleaned_thing.contains(" = ") {
+            let decode_columndata = decode_single_columndata(&cleaned_thing)?;
             let name = decode_columndata.0;
             let data = decode_columndata.1;
             encoding_list.push((name, data));
-        } else if thing.contains("and") {
-            encoding_list.push((thing, Data::default()));
-        } else if thing.contains("not") {
-            encoding_list.push((thing, Data::default()));
-        } else if thing.contains("or") {
-            encoding_list.push((thing, Data::default()));
+        } else if cleaned_thing.contains("and") {
+            encoding_list.push((cleaned_thing, Data::default()));
+        } else if cleaned_thing.contains("not") {
+            encoding_list.push((cleaned_thing, Data::default()));
+        } else if cleaned_thing.contains("or") {
+            encoding_list.push((cleaned_thing, Data::default()));
         } else {
-            return Err(Error::other(format!("Invalid nql syntax. This should be either a conditional or a single_columndata = {}", thing)));
+            return Err(Error::other(format!("Invalid nql syntax. This should be either a conditional or a single_columndata = {}", cleaned_thing)));
         }
     }
     return Ok(encoding_list);
+}
+pub fn condition_check(search: Vec<usize>, condition: String, other_search: Vec<usize>) -> Result<Vec<usize>, Error> {
+    let mut found_data: Vec<usize> = Vec::new();
+    match condition.as_str() {
+        "and" => {
+            for entry in search {
+                if other_search.contains(&entry) {
+                    found_data.push(entry);
+                }
+            }
+        },
+        "not" => {
+            for entry in search {
+                if !other_search.contains(&entry) {
+                    found_data.push(entry);
+                }
+            }
+        },
+        "or" => {
+            let mut combined_vec: Vec<usize> = Vec::new();
+            for entry in search {
+                if !combined_vec.contains(&entry) {
+                    combined_vec.push(entry);
+                }
+            }
+            for entry in other_search {
+                if !combined_vec.contains(&entry) {
+                    combined_vec.push(entry);
+                }
+            }
+
+            
+        },
+        "xor" => {
+            let mut combined_vec: Vec<usize> = Vec::new();
+            for entry in search {
+                if !combined_vec.contains(&entry) {
+                    combined_vec.push(entry);
+                }
+            }
+            for entry in other_search {
+                if !combined_vec.contains(&entry) {
+                    combined_vec.push(entry);
+                } else {
+                    let index = combined_vec.iter().position(|n| n == &entry).unwrap();
+                    let _ = combined_vec.remove(index);
+                }
+            }
+        },
+        _ => return Err(Error::other("Invalid nql syntax.")),
+    }
+    return Ok(found_data);
+}
+// WIP
+fn thing_in_list(thing: usize, list: Vec<usize>) -> Option<usize> {
+    for entry in list {
+        if thing == entry {
+            return Some(entry);
+        }
+    }
+    return None;
 }
