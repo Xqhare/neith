@@ -9,13 +9,12 @@ pub enum Data {
     Float(f64),
     Bool(bool),
     String(String),
+    Null(),
 }
 
 impl Default for Data {
     fn default() -> Self {
-        let vect: Vec<Data> = Vec::new();
-        let out = Data::List(vect);
-        return out;
+        return Data::Null();
     }
 }
 
