@@ -22,17 +22,19 @@ use success::Success;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Neith {
-    pub path: PathBuf,
-    pub ram_mode: bool,
-    pub tables: Vec<Table>,
+    path: PathBuf,
+    ram_mode: bool,
+    job_history: bool,
+    tables: Vec<Table>,
 }
 
 impl Default for Neith {
     fn default() -> Self {
         let tables: Vec<Table> = Vec::new();
         let ram_mode = true;
+        let job_history = false;
         let path = PathBuf::new();
-        return Neith{ tables, path, ram_mode, };
+        return Neith{ tables, path, ram_mode, job_history,};
     }
     
 }
@@ -43,11 +45,12 @@ impl From<PathBuf> for Neith {
         let read_file = read_json_from_neithdb_file(path.clone());
         let mut tables: Vec<Table> = Vec::new();
         let ram_mode = false;
+        let job_history = false;
         for table in read_file.entries() {
             let table = Table::from(table);
             tables.push(table);
         }
-        return Neith{ tables, path, ram_mode, };
+        return Neith{ tables, path, ram_mode, job_history,};
     }
 }
 
@@ -57,7 +60,8 @@ impl Neith {
     pub fn new(value: PathBuf, ram_mode: bool) -> Self {
         let path = canonize_path(value);
         let tables: Vec<Table> = Vec::new();
-        return Neith{ tables, path, ram_mode, };
+        let job_history = false;
+        return Neith{ tables, path, ram_mode, job_history,};
     }
     pub fn connect<P>(filename: P) -> Self where P: AsRef<Path> + Clone, PathBuf: From<P> {
         let path = canonize_path(filename.into());
@@ -75,6 +79,14 @@ impl Neith {
     pub fn connect_ram_mode<P>(_connection_name: P) -> Self where P: AsRef<Path> + Clone, PathBuf: From<P> {
         let _connection = Neith::default();
         unimplemented!();
+    }
+    pub fn set_job_history(&mut self, value: bool) -> Result<Success, Error> {
+        self.job_history == value;
+        if self.job_history == value {
+            return Ok(Success::SuccessMessage(true));
+        } else {
+            return Err(Error::other(format!("Couldn't set job history. Was {:?} tried to set to {:?}", self.job_history, value)));
+        }
     }
     // This is the general apperance of a mk_table call.
     // mk_table(table_name, column_vec((column_name0, unique_bool, type)), (column_name1, unique_bool, type))
@@ -197,53 +209,16 @@ impl Neith {
                         if command_lvl3.0.as_str().contains("in") {
                             let command_lvl4 = strip_leading_word(command_lvl3.1);
                             let tablename = command_lvl4.0;
+                            let table_index = self.search_for_table(tablename)?;
                             let command_lvl5 = strip_leading_word(command_lvl4.1);
                             if command_lvl5.0.as_str().contains("where"){
                                 let conditions = command_lvl5.1;
-                                let decoded_conditions = decode_list_conditions(conditions)?;
-                                // new fn
-                                let encoded_conditions = encode_list_conditions(decoded_conditions)?;
-                                // from here somewhere -> takes in list_conditions and returns
-                                // finished search vector.
-                                let mut found_data: Vec<(usize, Data)> = Vec::new();
-                                let mut counter: usize = 0;
-                                for entry in &encoded_conditions {
-                                    let name = &entry.0;
-                                    let data = &entry.1;
-                                    let table_index = self.search_for_table(tablename.clone())?;
-                                    let search_data = self.tables[table_index].search_column_data(name.clone(), data.clone())?;
-                                    // If data is default, it is a conditional in pos 0!
-                                    if encoded_conditions[counter + 1].1 == Data::default() {
-                                        let next_columndata = &encoded_conditions[counter + 2];
-                                        // maybe another fn right here?
-                                        let other_name = &next_columndata.0;
-                                        let other_data = &next_columndata.1;
-                                        let other_search_data = self.tables[table_index].search_column_data(other_name.clone(), other_data.clone())?;
-                                        match encoded_conditions[counter + 1].0.as_str() {
-                                            "and" => {
-                                                for entry in search_data {
-                                                    let index = entry.0;
-                                                    let data = entry.1;
-                                                    for thing in &other_search_data {
-                                                        let other_index = thing.0;
-                                                        let other_data = &thing.1;
-                                                        if index == other_index {
-                                                            // AND SEARCH HIT
-                                                            found_data.push((index, data.clone()));
-                                                            found_data.push((other_index, other_data.clone()));
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "not" => {},
-                                            "or" => {},
-                                            _ => return Err(Error::other("Invalid nql syntax.")),
-                                        }
-                                    // What if entry is an and/or/not
-                                    } else if entry.1 == Data::default() {
-                                        
-                                    }
-                                    counter += 1;
+                                let finished_search = self.search_conditionals(conditions, table_index)?;
+                                let answ = self.tables[table_index].delete_data(finished_search);
+                                if answ.is_ok() {
+                                    return Ok(true);
+                                } else {
+                                    return Err(Error::other("Invalid nql syntax."));
                                 }
                             } else {
                                 return Err(Error::other("Invalid nql syntax."));
@@ -254,14 +229,12 @@ impl Neith {
                     },
                     _ => return Err(Error::other("Invalid nql syntax.")),
                 }
-                println!("DELETE: {:?}", query);
-                return Ok(true);
             },
             "update" => {
                 println!("UPDATE: {:?}", query);
                 return Ok(true);
             },
-            "select" => {
+        "select" => {
                 println!("SELECT: {:?}", query);
                 return Ok(true);
             },
@@ -274,6 +247,76 @@ impl Neith {
                 return Err(Error::other("Invalid nql syntax."));
             },
         }
+    }
+    fn search_conditionals(&self, conditions: String, table_index: usize) -> Result<Vec<usize>, Error> {
+        let decoded_conditions = decode_list_conditions(conditions)?;
+        let mut encoded_conditions = encode_list_conditions(decoded_conditions)?;
+        let mut found_data: Vec<usize> = Vec::new();
+
+        // Len can only be:
+        // 0 = error, 
+        // 1 == one set of 'columname = data', 
+        // 3 == 'columname = data' 'and/not/or' 'other_columnname = other_data'
+        // >= 3 == more: 'and' 'name = data'
+        if encoded_conditions.len() == 0 {
+            return Err(Error::other("Invalid nql syntax."));
+        } else if encoded_conditions.len() == 1 {
+            let data_query = encoded_conditions.first();
+            if data_query.is_some() {
+                let name = &data_query.unwrap().0;
+                let data = &data_query.unwrap().1;
+                let search = self.tables[table_index].search_column_data(name.to_string(), data.clone())?;
+                // as there is no other elements, no need for push, just set:
+                found_data = search;
+            } else {
+                return Err(Error::other(format!("Invalid nql syntax: {:?} = should be a column name and data", encoded_conditions[0])));
+            }
+        } else if encoded_conditions.len() == 3 {
+
+            // fn tbd(input: Vec<(String, Data)>) -> Vec<(usize, Data)>
+            let data_query = &encoded_conditions[0];
+            let name = &data_query.0;
+            let data = &data_query.1;
+            let condition = &encoded_conditions[1].0;
+            let other_query = &encoded_conditions[2];
+            let other_name = &other_query.0;
+            let other_data = &other_query.1;
+            let search = self.tables[table_index].search_column_data(name.to_string(), data.clone())?;
+            let other_search = self.tables[table_index].search_column_data(other_name.to_string(), other_data.clone())?;
+            let condition_check = condition_check(search, condition.to_string(), other_search)?;
+            // as there is no other elements, no need for push, just set:
+            found_data = condition_check;
+        } else if encoded_conditions.len() > 3 {
+            // fn tbd(input: Vec<(String, Data)>) -> Vec<(usize, Data)>
+            let data_query = encoded_conditions.remove(0);
+            let name = data_query.0;
+            let data = data_query.1;
+            // As I remove from the vec, 1 is now 0
+            let condition = encoded_conditions.remove(0).0;
+            // As I remove from the vec, 2 is now 0
+            let other_query = encoded_conditions.remove(0);
+            let other_name = other_query.0;
+            let other_data = other_query.1;
+            let search = self.tables[table_index].search_column_data(name, data)?;
+            let other_search = self.tables[table_index].search_column_data(other_name, other_data)?;
+            let mut temp_hit_files: Vec<usize>;
+            temp_hit_files = condition_check(search, condition, other_search)?;
+            let mut read_condition = String::new();
+            for entry in encoded_conditions {
+                if entry.1 == Data::default() {
+                    // Has to be a conditional
+                    read_condition = entry.0;
+                } else {
+                    let diff_name = entry.0;
+                    let diff_data = entry.1;
+                    let diff_search = self.tables[table_index].search_column_data(diff_name, diff_data)?;
+                    temp_hit_files = condition_check(temp_hit_files, read_condition.clone(), diff_search)?;
+                }
+            }
+            // As the code above ended up exhaustive, again just set:
+            found_data = temp_hit_files;
+        }
+        return Ok(found_data);
     }
     fn search_for_table(&self, tablename: String) -> Result<usize, Error> {
         let mut counter: usize = 0;
@@ -304,10 +347,14 @@ impl Neith {
 
 fn main() {
     let mut con = Neith::connect("test.neithdb");
+    let job_history = con.set_job_history(true);
     let new_table = con.execute("new table testtable with (column1 true, column2 false, column3 false)");
     let new_columns = con.execute("new column testtable with (column4 false, column5 false)");
     let new_data_column1 = con.execute("new data testtable (column1 = 1, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
     let new_data_column2 = con.execute("new data testtable (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
+    let _ = con.execute("delete table with table_name0");
+    let _ = con.execute("delete column with column5 in testtable");
+    let _ = con.execute("delete data in testtable where [column1 = 2, and column3 = true]");
     println!("{:?} | {:?}", new_table, new_columns);
     println!("{:?}", con.tables);
     println!("---");
