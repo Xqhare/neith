@@ -1,13 +1,22 @@
-use std::{path::PathBuf, io::Error, hash::Hash, collections::{HashMap, hash_map::Entry}};
+
+use std::{path::PathBuf, io::Error};
 
 use crate::{data::Data, success::Success};
 
 // write a decoder for every code step 
 pub fn strip_leading_word(to_strip: String) -> (String, String) {
-    let split_query: Vec<&str> = to_strip.splitn(2, " ").collect::<Vec<_>>();
-    let command = split_query.clone().into_iter().take(1).collect::<String>();
-    let remainder = split_query.clone().into_iter().skip(1).collect::<String>();
-    return (command.clone(), remainder);
+    let split_query = to_strip.splitn(2, " ");
+    let command = split_query.clone().take(1).collect::<String>();
+    let remainder = split_query.clone().skip(1).collect::<String>();
+    return (command, remainder);
+}
+pub fn strip_condition_list(to_strip: String) -> (String, String) {
+    let split_query = to_strip.splitn(2, "]");
+    let mut condition_list = split_query.clone().take(1).collect::<String>();
+    condition_list.push_str("]");
+    let remainder = split_query.skip(1).collect::<String>().trim_start().to_string();
+    return (condition_list, remainder);
+
 }
 // Add my own file extension, because I can! By first removing any the user might have set,
 // and then adding on my own.
@@ -61,7 +70,6 @@ pub fn decode_list_columndata(list_val: String) -> Result<Vec<(String, Data)>, E
             list_check = true;
         }
         if list_check {
-            println!("LIST DETECTED");
             list_store.push_str(entry);
             if entry.contains(")") {
                 list_check = false;
@@ -70,22 +78,24 @@ pub fn decode_list_columndata(list_val: String) -> Result<Vec<(String, Data)>, E
             }
             list_store.push_str(",");
         } else {
-            println!("DEBUGING == {:?}", entry);
             let new = decode_single_columndata(entry)?;
             out.push(new);
         }
     }
-    println!("{:?}", out);
     return Ok(out);
 }
 // decode this: (other_columnname = newdata) -> as smaller more focused function for more broad
 // usage during decoding.
 pub fn decode_single_columndata(single_val: &str) -> Result<(String, Data), Error> {
     // I get: columnname = data
-    let cleaned_input = single_val.replace("=", "");
+    let mut cleaned_input = single_val.replace("=", "");
+    if cleaned_input.contains("]") {
+        let temp = cleaned_input.replace("]", "");
+        cleaned_input = temp;
+    }
     let split_input = cleaned_input.split_whitespace();
     let name = split_input.clone().take(1).collect::<String>();
-    let data = Data::from(split_input.clone().skip(1).collect::<String>());
+    let data = Data::from(split_input.clone().skip(1).intersperse(" ").collect::<String>());
     return Ok((name, data));
 }
 
@@ -109,7 +119,6 @@ pub fn decode_list_conditions(value: String) -> Result<Vec<String>, Error> {
     }
     return Ok(out);
 }
-
 pub fn encode_list_conditions(value: Vec<String>) -> Result<Vec<(String, Data)>, Error> {
     let mut encoding_list: Vec<(String, Data)> = Vec::new();
     for thing in value {
@@ -167,8 +176,6 @@ pub fn condition_check(search: Vec<usize>, condition: String, other_search: Vec<
                     combined_vec.push(entry);
                 }
             }
-
-            
         },
         "xor" => {
             let mut combined_vec: Vec<usize> = Vec::new();
@@ -189,13 +196,4 @@ pub fn condition_check(search: Vec<usize>, condition: String, other_search: Vec<
         _ => return Err(Error::other("Invalid nql syntax.")),
     }
     return Ok(found_data);
-}
-// WIP
-fn thing_in_list(thing: usize, list: Vec<usize>) -> Option<usize> {
-    for entry in list {
-        if thing == entry {
-            return Some(entry);
-        }
-    }
-    return None;
 }
