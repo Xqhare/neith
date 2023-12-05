@@ -1,3 +1,5 @@
+
+#![feature(iter_intersperse)]
 use std::{io::{self, Error}, path::{Path, PathBuf}};
 
 use crate::{utils::util::{*}, data::Data};
@@ -88,6 +90,9 @@ impl Neith {
             return Err(Error::other(format!("Couldn't set job history. Was {:?} tried to set to {:?}", self.job_history, value)));
         }
     }
+    pub fn save(&mut self) -> Success {
+        unimplemented!()
+    }
     // This is the general apperance of a mk_table call.
     // mk_table(table_name, column_vec((column_name0, unique_bool, type)), (column_name1, unique_bool, type))
     //
@@ -155,7 +160,7 @@ impl Neith {
                         let command_lvl4 = command_lvl3.1.clone();
                         let decoded = decode_list_columndata(command_lvl4).unwrap();
                         let table_index = self.search_for_table(tablename)?;
-                        let answ = self.tables[table_index].new_data(decoded)?;
+                        let answ = self.tables[table_index].new_data(decoded);
                         if answ == Success::SuccessMessage(true) {
                             return Ok(true);
                         } else {
@@ -231,8 +236,28 @@ impl Neith {
                 }
             },
             "update" => {
-                println!("UPDATE: {:?}", query);
-                return Ok(true);
+                let command_lvl2 = strip_leading_word(command_lvl1.1);
+                let tablename = command_lvl2.0;
+                let command_lvl3 = strip_leading_word(command_lvl2.1);
+                if command_lvl3.0.as_str().contains("where") {
+                    let command_lvl4 = strip_condition_list(command_lvl3.1);
+                    let conditions = command_lvl4.0;
+                    let command_lvl5 = strip_leading_word(command_lvl4.1);
+                    if command_lvl5.0.as_str().contains("with") {
+                        let decoded_list = decode_list_columndata(command_lvl5.1)?;
+                        let table_index = self.search_for_table(tablename)?;
+                        let search = self.search_conditionals(conditions, table_index)?;
+                        let answ = self.tables[table_index].update_data(decoded_list, search)?;
+                        match answ {
+                            Success::SuccessMessage(true) => return Ok(true),
+                            _ => return Err(Error::other(format!("Invalid nql syntax."))),
+                        }
+                    } else {
+                        return Err(Error::other(format!("Invalid nql syntax. {:?} should be 'where'.", command_lvl3.0)));
+                    }
+                } else {
+                    return Err(Error::other(format!("Invalid nql syntax. {:?} should be 'where'.", command_lvl3.0)));
+                }
             },
             "select" => {
                 println!("SELECT: {:?}", query);
@@ -349,13 +374,26 @@ fn main() {
     let mut con = Neith::connect("test.neithdb");
     let job_history = con.set_job_history(true);
     let new_table = con.execute("new table testtable with (column1 true, column2 false, column3 false)");
-    let new_columns = con.execute("new column testtable with (column4 false, column5 false)");
-    let new_data_column1 = con.execute("new data testtable (column1 = 1, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
+    let new_columns = con.execute("new column testtable with (column4 false, column5 false, column6 false, column7 false)");
+    let _ = con.execute("new column testtable with (column8 false)");
+    let new_data_column1 = con.execute("new data testtable (column1 = 1, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text)), column6 = this will be deleted!");
     let new_data_column2 = con.execute("new data testtable (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
     let _ = con.execute("delete table with table_name0");
-    let _ = con.execute("delete column with column5 in testtable");
-    let _ = con.execute("delete data in testtable where [column1 = 2, and column3 = true]");
+    println!("AA");
+    let _ = con.execute("delete column with column6 in testtable");
+    println!("BB");
+    let _ = con.execute("delete data in testtable where [column1 = 2, and column3 = true]"); 
+    println!("CC");
+    let _ = con.execute("new data testtable (column1 = 3, column2 = 1, column3 = false, column4 = some, column7 = this will not be deleted!)");
+    let _ = con.execute("update testtable where [column1 = 3] with (column7 = this was updated!)");
     println!("{:?} | {:?}", new_table, new_columns);
+    for table in con.tables.clone() {
+        println!("TABLE: {:?}", table.name);
+        for column in table.columns {
+            println!("{:?}", column);
+        }
+    }
+    println!("---");
     println!("{:?}", con.tables);
     println!("---");
     println!("{:?} | {:?}", new_data_column1, new_data_column2)
