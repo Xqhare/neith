@@ -1,7 +1,7 @@
 
 use std::{path::PathBuf, io::Error};
 
-use crate::{data::Data, success::Success};
+use crate::{data::Data, success::Success, table::Table};
 
 // write a decoder for every code step 
 pub fn strip_leading_word(to_strip: String) -> (String, String) {
@@ -16,7 +16,20 @@ pub fn strip_condition_list(to_strip: String) -> (String, String) {
     condition_list.push_str("]");
     let remainder = split_query.skip(1).collect::<String>().trim_start().to_string();
     return (condition_list, remainder);
-
+}
+pub fn strip_column_list(to_strip: String) -> Result<(String, String), Error> {
+    if to_strip.starts_with("*") {
+        let answ = strip_leading_word(to_strip);
+        return Ok(answ);
+    } else if to_strip.starts_with("(") {
+        let split_query = to_strip.splitn(2, ")");
+        let mut condition_list = split_query.clone().take(1).collect::<String>();
+        condition_list.push_str(")");
+        let remainder = split_query.skip(1).collect::<String>().trim_start().to_string();
+        return Ok((condition_list, remainder));
+    } else {
+        return Err(Error::other(format!("Invalid nql syntax; {:?} is not a column list (columnname, othercolumnname)", to_strip)));
+    }
 }
 // Add my own file extension, because I can! By first removing any the user might have set,
 // and then adding on my own.
@@ -31,6 +44,24 @@ pub fn check_for_persistant_db(filename: PathBuf) -> bool {
         Ok(result) => return result,
         _ => return false,
     }
+}
+pub fn decode_column_list(input: String, table: Table) -> Vec<String> {
+    if input.contains(&"*".to_string()) {
+        let mut found_column: Vec<String> = Vec::new();
+        for column in table.columns {
+            found_column.push(column.name);
+        }
+        return found_column;
+    } else {
+        let no_parenthesis = input.replace("(", "").replace(")", "");
+        let column_names = no_parenthesis.split(",");
+        let mut out: Vec<String> = Vec::new();
+        for name in column_names {
+            out.push(name.trim().to_string());
+        }
+        return out;
+    }
+    
 }
 pub fn decode_columnmaker(input: String) -> Result<Vec<(String, bool)>, Error> {
     // ('columnname' 'unique, ...') is left.
@@ -102,7 +133,8 @@ pub fn decode_single_columndata(single_val: &str) -> Result<(String, Data), Erro
 // decode this: ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]
 //
 pub fn decode_list_conditions(value: String) -> Result<Vec<String>, Error> {
-    let split = value.split(",");
+    let cleaned_value = value.replace("[", "").replace("]", "");
+    let split = cleaned_value.split(",");
     let mut out: Vec<String> = Vec::new();
     for entry in split.clone() {
         if entry.starts_with(" and") || entry.starts_with(" not") || entry.starts_with(" or") {
