@@ -84,6 +84,28 @@ impl Table {
         }
         return Ok(Success::SuccessMessage(true));
     }
+    pub fn select_data(self, coulumn_names: Vec<String>, indicies: Vec<usize>) -> Success {
+        let mut found_data: Vec<Data> = Vec::new();
+        println!("DOG {:?} | {:?}", coulumn_names, indicies);
+        if coulumn_names.contains(&"*".to_string()) {
+            for column in self.columns {
+                for index in indicies.clone() {
+                    found_data.push(column.contents.all_row_data[index].clone());
+                }
+            }
+        } else {
+            for column in self.columns {
+                if coulumn_names.contains(&column.name) {
+                    println!("DOG FOUND {:?} IN {:?}", column.name, coulumn_names);
+                    for index in indicies.clone() {
+                        found_data.push(column.contents.all_row_data[index].clone());
+                    }
+                }
+            }
+        }
+        return Success::Result(found_data);
+        
+    }
     pub fn new_data(&mut self, value: Vec<(String, Data)>) -> Success {
         let name_vec: Vec<String> = value.iter().map(|entry| {entry.0.clone()}).collect();
         for column in &mut self.columns {
@@ -116,7 +138,7 @@ impl Table {
     }
     /// Returns the index of the data in the column.
     pub fn search_column_data(&self, columnname: String, data: Data) -> Result<Vec<usize>, Error> {
-        let column_index = self.search_for_column(columnname)?;
+        let column_index = self.search_for_column(columnname.clone())?;
         let mut out: Vec<usize> = Vec::new();
         let mut counter: usize = 0;
         for entry in self.columns[column_index].contents.all_row_data.clone() {
