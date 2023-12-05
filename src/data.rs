@@ -30,13 +30,11 @@ impl From<String> for Data {
         }
         // (1, 10.1, true, test)
         if value.starts_with("(") && value.ends_with(")") {
-            println!("LIST DETECTED");
             let temp_val = value.replace("(", "").replace(")", "");
             let split = temp_val.split(",");
             let mut out: Vec<Data> = Vec::new();
             for entry in split {
-                // Will this recursive call work?
-                let data = self::Data::from_single_for_list(entry.to_string());
+                let data = self::Data::from_single_for_list(entry.trim_start().to_string());
                 out.push(data);
             }
             return Data::List(out);
