@@ -119,7 +119,7 @@ impl Neith {
     //
     // For returning the query or a success message, I could wrap another custom wrapper in Result,
     // e.g. Result<NeithAnswer, io::Error>
-    pub fn execute(&mut self, query: &str) -> Result<bool, io::Error> {
+    pub fn execute(&mut self, query: &str) -> Result<Success, io::Error> {
         let binding = Into::<String>::into(query);
         let command_lvl1 = strip_leading_word(binding);
         match command_lvl1.0.as_str() {
@@ -135,7 +135,7 @@ impl Neith {
                             let answ = Table::from((tablename, columns));
                             self.tables.push(answ);
                             // Successful decoding of syntax!
-                            return Ok(true);
+                            return Ok(Success::SuccessMessage(true));
                         } else {
                             return Err(Error::other("Invalid nql syntax."));
                         }
@@ -148,7 +148,7 @@ impl Neith {
                             let answ = self.tables[table_index].new_columns(columns);
                             // Successful decoding of syntax!
                             if answ == Success::SuccessMessage(true) {
-                                return Ok(true);
+                                return Ok(answ);
                             } else {
                                 return Err(Error::other("Invalid nql syntax."));
                             }
@@ -162,7 +162,7 @@ impl Neith {
                         let table_index = self.search_for_table(tablename)?;
                         let answ = self.tables[table_index].new_data(decoded);
                         if answ == Success::SuccessMessage(true) {
-                            return Ok(true);
+                            return Ok(answ);
                         } else {
                             return Err(Error::other("Invalid nql syntax."));
                         }
@@ -180,7 +180,7 @@ impl Neith {
                             let tablename = command_lvl3.1;
                             let answ = self.delete_table(tablename);
                             if answ.is_ok() {
-                                return Ok(true);
+                                return Ok(answ.unwrap());
                             } else {
                                 return Err(Error::other("Invalid nql syntax."));
                             }
@@ -198,7 +198,7 @@ impl Neith {
                                 let tablename = command_lvl5.1;
                                 let answ = self.delete_column(tablename, columnname);
                                 if answ.is_ok() {
-                                    return Ok(true);
+                                    return Ok(answ.unwrap());
                                 } else {
                                     return Err(Error::other("Invalid nql syntax."));
                                 }
@@ -221,7 +221,7 @@ impl Neith {
                                 let finished_search = self.search_conditionals(conditions, table_index)?;
                                 let answ = self.tables[table_index].delete_data(finished_search);
                                 if answ.is_ok() {
-                                    return Ok(true);
+                                    return Ok(answ.unwrap());
                                 } else {
                                     return Err(Error::other("Invalid nql syntax."));
                                 }
@@ -249,7 +249,7 @@ impl Neith {
                         let search = self.search_conditionals(conditions, table_index)?;
                         let answ = self.tables[table_index].update_data(decoded_list, search)?;
                         match answ {
-                            Success::SuccessMessage(true) => return Ok(true),
+                            Success::SuccessMessage(true) => return Ok(answ),
                             _ => return Err(Error::other(format!("Invalid nql syntax."))),
                         }
                     } else {
@@ -260,12 +260,32 @@ impl Neith {
                 }
             },
             "select" => {
-                println!("SELECT: {:?}", query);
-                return Ok(true);
+                let command_lvl2 = strip_column_list(command_lvl1.1)?;
+                let command_lvl3 = strip_leading_word(command_lvl2.1);
+                if command_lvl3.0.as_str().contains("from") {
+                    let command_lvl4 = strip_leading_word(command_lvl3.1);
+                    let tablename = command_lvl4.0;
+                    let table_index = self.search_for_table(tablename)?;
+                    let decoded_column_list: Vec<String> = decode_column_list(command_lvl2.0, self.tables[table_index].clone());
+                    let command_lvl5 = strip_leading_word(command_lvl4.1);
+                    if command_lvl5.0.as_str().contains("where") {
+                        let conditions = command_lvl5.1;
+                        let search = self.search_conditionals(conditions.clone(), table_index)?;
+                        let answ = self.tables[table_index].clone().select_data(decoded_column_list.clone(), search.clone());
+                        println!("CON  {:?}", conditions);
+                        println!("DEC  {:?}", decoded_column_list);
+                        println!("SEA  {:?}", search);
+                        return Ok(answ);
+                    } else {
+                        return Err(Error::other(format!("Invalid nql syntax. {:?} should be 'where'", command_lvl5.1)));
+                    }
+                } else {
+                    return Err(Error::other(format!("Invalid nql syntax. {:?} should be 'from'", command_lvl3.1)));
+                }
             },
             "get" => {
                 println!("GET: {:?}", query);
-                return Ok(true);
+                return Err(Error::other("Invalid nql syntax."));
             },
             _ => { 
                 println!("ERROR: {:?} | {:?} | {:?}", query, command_lvl1.0, command_lvl1.1);
@@ -291,6 +311,7 @@ impl Neith {
                 let name = &data_query.unwrap().0;
                 let data = &data_query.unwrap().1;
                 let search = self.tables[table_index].search_column_data(name.to_string(), data.clone())?;
+                println!("DOG SEA {:?}", search);
                 // as there is no other elements, no need for push, just set:
                 found_data = search;
             } else {
@@ -379,13 +400,16 @@ fn main() {
     let new_data_column1 = con.execute("new data testtable (column1 = 1, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text)), column6 = this will be deleted!");
     let new_data_column2 = con.execute("new data testtable (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
     let _ = con.execute("delete table with table_name0");
-    println!("AA");
     let _ = con.execute("delete column with column6 in testtable");
-    println!("BB");
     let _ = con.execute("delete data in testtable where [column1 = 2, and column3 = true]"); 
-    println!("CC");
     let _ = con.execute("new data testtable (column1 = 3, column2 = 1, column3 = false, column4 = some, column7 = this will not be deleted!)");
     let _ = con.execute("update testtable where [column1 = 3] with (column7 = this was updated!)");
+    let answ = con.execute("select * from testtable where [column1 = 1, or column1 = 3]");
+    let answ2 = con.execute("select (column7, column1) from testtable where [column1 = 3]");
+    println!("==========");
+    println!("{:?}", answ.unwrap());
+    println!("{:?}", answ2.unwrap());
+    println!("==========");
     println!("{:?} | {:?}", new_table, new_columns);
     for table in con.tables.clone() {
         println!("TABLE: {:?}", table.name);
