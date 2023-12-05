@@ -1,13 +1,26 @@
 # NEITH: Neith Enhances Information Through Hierarchy
 Neith is a small, lightweight and BLAZINGLY FAST database.
 
+The name Neith is derived from Neith, the ancient Egyptian goddess of war, creation, and weaving. She represents the intricate connections and patterns that form the cosmos and foundation of knowledge.
+
 Neith is not made for large projects, or projects that need to do a lot of data intensive work. Neith is made for small projects, with the need for some database storage and simple logic. For large datasets more ram is needed as Neith holds the entire database in memory from startup, leading to fast reads and writes (except the save to disc of course). Users are strongly discuraged from using complex api requests, this is mainly because it does not support multicore - maybe at some point, no promises - so performance can be impacted by such requests.
 
-I tried to make it as unopinionated as possible so it will try to do whatever it is told to do; So beware of what you tell it to do!
+## Design and philosophy of Neith
+
+Neith is designed to do what the user or program is telling it, whatever that is. Neith will execute anything passed to it, as long as it can decode it. There is no handholding, Neith will never assume or interpret what the user wants to do, it just does.
+
+I tried to make it as unopinionated as possible so that it will try to do whatever it is told to do; So beware of what you do!
+For example, you can put whatever you want into any column, be it a number, string, boolean or list. Also the `unique` key entered during column creation is mostly for ease of use, Neith would happily put the same thing twice into a column marked as `unique`. This is by design, Neith will do what you tell it, and only inform you if it encountered an Error or succeded.
+These design principles are the reason why Neith will not save to disc by itself for example. Neith will not assume what it should do, it will wait for you to tell it what to do.
 
 ## Naming
 
-The name Neith is derived from Neith, the ancient Egyptian goddess of war, creation, and weaving. She represents the intricate connections and patterns that form the cosmos and foundation of knowledge. 
+Neith, the ancient Egyptian goddess, was a multifaceted diety revered for her roles in creation, widom, weaving, and war. She was one of the most enduring and influential goddesses throughout Egypt's long and storied history and was worshipped from the Predynastic era (c. 6000-3150 BCE) through to the arrival of roman rule (30 BCE), some 4000 years.
+Her primary association was with the city of Sais in the Nile river delta, where she was worshipped as the patron goddess. Often depicted as a woman wearing the red crown of lower egypt and holding crossed arrows and bow, she symbolized power as well as war.
+Neith's role as a creator goddess extended far beyond weaving, as she was believed to have woven the cosmos into existence on her loom. She was also associated with the primordial waters, further emphasizing her creative power, as these waters were seen as the source of all life.
+Her wisdom was also widely celebrated, and often consulted for guidance and counsel.
+
+In additon Neith was also a fierce protector and warrior goddess. Her depictions often showed her with hunting implements, and her protective role extended into the afterlife where she was believed to guide and protect the deceased on their journey.
 
 Her name resonates with the purpose of this database, which aims to weave together desperate peices of information into a cohesive and meaningful tapestry of data. Just as Neith skillfully weaves threads into exquisite fabrics, this database seeks to seamlessly integrate and organize data to unveil hidden insights. Neith's association with order reflecting the databese's ability to efficiently manage and organize data.
 
@@ -45,14 +58,11 @@ The boolean wrapped by the `SuccessMessage` type does not matter;
 It can also contain the data queried, or an Error encountered during execution.
 For this reason, it is recommended that you bind every query to a variable, marking it with `_` if you want to ignore the returned value.
 
-### Connecting
-It is called with the `connection(path)` function, the returned type is the connection to the database.
+### Nql or Neith query language
 
-### Data interaction
-For data interaction of any kind the `execute()` function is used. It takes a `&str` as an argument and returns the appropriate data, a confirmation of success or error.
-Example syntax is explained further down.
+Nql is a very simple sql and mysql inspired syntax for interacting with neith.
 
-#### Nsql reference table
+#### Nql reference table
 
 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 
 | - | - | - | - | - | - | - | 
@@ -77,6 +87,13 @@ let new_columns = con.execute("new column testtable with (column4 false, column5
 let new_data_column1 = con.execute("new data testtable (column1 = 1, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
 let new_data_column2 = con.execute("new data testtable (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
 ```
+
+### Connecting
+It is called with the `connection(path)` function, the returned type is the connection to the database.
+
+### Data interaction
+For data interaction of any kind the `execute()` function is used. It takes a `&str` as an argument and returns the appropriate data, a confirmation of success or error.
+Example syntax is explained above.
 
 #### Writing data
 
