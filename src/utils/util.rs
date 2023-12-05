@@ -208,6 +208,7 @@ pub fn condition_check(search: Vec<usize>, condition: String, other_search: Vec<
                     combined_vec.push(entry);
                 }
             }
+            found_data = combined_vec;
         },
         "xor" => {
             let mut combined_vec: Vec<usize> = Vec::new();
@@ -224,6 +225,7 @@ pub fn condition_check(search: Vec<usize>, condition: String, other_search: Vec<
                     let _ = combined_vec.remove(index);
                 }
             }
+            found_data = combined_vec;
         },
         _ => return Err(Error::other("Invalid nql syntax.")),
     }
