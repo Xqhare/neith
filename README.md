@@ -158,6 +158,7 @@ let select2 = con.execute("select (column1, column2, column3, column4) from test
 ```
 
 Selects entry in specified column. * is valid for all columns.
+Select returns data ALWAYS in the oder it was found in the table, e.g. if you search for 'column7, column1, column3' the results will be in the order 'column1, column3, column7'.
 
 #### Convinience functions:
 
