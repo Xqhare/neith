@@ -68,24 +68,36 @@ impl Table {
         }
         return Ok(Success::SuccessMessage(true));
     }
-    pub fn new_data(&mut self, value: Vec<(String, Data)>) -> Result<Success, Error> {
-        let mut success = true;
-        for entry in value {
-            let columnname = entry.0;
-            let data = entry.1;
-            let column_index = self.search_for_column(columnname)?;
-            let column = self.columns[column_index].new_data(data);
-            if column == Success::SuccessMessage(true) && success == true {
-                success = true;
-            } else {
-                success = false;
+    pub fn update_data(&mut self, value: Vec<(String, Data)>, indicies: Vec<usize>) -> Result<Success, Error> {
+        let name_vec: Vec<String> = value.iter().map(|entry| {entry.0.clone()}).collect();
+        for column in &mut self.columns {
+            if name_vec.contains(&column.name) {
+                for index in indicies.clone() {
+                    for entry in value.clone() {
+                        if column.name == entry.0 {
+                            let _ = column.update_data(index, entry.1);
+                        }
+                    }
+                }
+                
             }
         }
-        if success {
-            return Ok(Success::SuccessMessage(true));
-        } else {
-            return Err(Error::other("Writing data went wrong!"));
+        return Ok(Success::SuccessMessage(true));
+    }
+    pub fn new_data(&mut self, value: Vec<(String, Data)>) -> Success {
+        let name_vec: Vec<String> = value.iter().map(|entry| {entry.0.clone()}).collect();
+        for column in &mut self.columns {
+            if name_vec.contains(&column.name) {
+                for entry in value.clone() {
+                    if column.name == entry.0 {
+                        let _ = column.new_data(entry.1);
+                    }
+                }
+            } else {
+                let _ = column.new_data(Data::Null());
+            }
         }
+        return Success::SuccessMessage(true);
     }
     pub fn search_for_column(&self, columnname: String) -> Result<usize, Error> {
         let mut counter: usize = 0;
