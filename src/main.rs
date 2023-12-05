@@ -272,9 +272,6 @@ impl Neith {
                         let conditions = command_lvl5.1;
                         let search = self.search_conditionals(conditions.clone(), table_index)?;
                         let answ = self.tables[table_index].clone().select_data(decoded_column_list.clone(), search.clone());
-                        println!("CON  {:?}", conditions);
-                        println!("DEC  {:?}", decoded_column_list);
-                        println!("SEA  {:?}", search);
                         return Ok(answ);
                     } else {
                         return Err(Error::other(format!("Invalid nql syntax. {:?} should be 'where'", command_lvl5.1)));
@@ -284,6 +281,15 @@ impl Neith {
                 }
             },
             "get" => {
+                let command_lvl2 = strip_leading_word(command_lvl1.1);
+                match command_lvl2.0.as_str() {
+                    "min" => {},
+                    "max" => {},
+                    "len" => {},
+                    _ => {
+                            return Err(Error::other(format!("Invalid nql syntax. {:?} should be one of [min/max/len]", command_lvl2.0)));
+                        },
+                }
                 println!("GET: {:?}", query);
                 return Err(Error::other("Invalid nql syntax."));
             },
@@ -311,14 +317,12 @@ impl Neith {
                 let name = &data_query.unwrap().0;
                 let data = &data_query.unwrap().1;
                 let search = self.tables[table_index].search_column_data(name.to_string(), data.clone())?;
-                println!("DOG SEA {:?}", search);
                 // as there is no other elements, no need for push, just set:
                 found_data = search;
             } else {
                 return Err(Error::other(format!("Invalid nql syntax: {:?} = should be a column name and data", encoded_conditions[0])));
             }
         } else if encoded_conditions.len() == 3 {
-
             // fn tbd(input: Vec<(String, Data)>) -> Vec<(usize, Data)>
             let data_query = &encoded_conditions[0];
             let name = &data_query.0;
