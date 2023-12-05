@@ -1,3 +1,5 @@
+use std::io::Error;
+
 use json::JsonValue;
 
 use crate::{data::Data, success::Success};
@@ -71,6 +73,12 @@ impl Column {
     pub fn update_data(&mut self, index: usize, value: Data) -> Success {
         return self.contents.update_data(index, value);
     }
+    pub fn min(&self) -> Success {
+        return self.contents.min();
+    }
+    pub fn max(&self) -> Success {
+        return self.contents.max();
+    }
 }
 
 impl ColumnData {
@@ -86,5 +94,23 @@ impl ColumnData {
         let _ = self.delete_data(index);
         self.all_row_data.insert(index, value);
         return Success::SuccessMessage(true);
+    }
+    pub fn min(&self) -> Success {
+        let mut out = self.all_row_data.first().unwrap();
+        for data in self.all_row_data.iter().skip(1) {
+            if data < out {
+                out = data;
+            }
+        }
+        return Success::Result(vec![out.to_owned()]);
+    }
+    pub fn max(&self) -> Success {
+        let mut out = self.all_row_data.first().unwrap();
+        for data in self.all_row_data.iter().skip(1) {
+            if data > out {
+                out = data;
+            }
+        }
+        return Success::Result(vec![out.to_owned()]);
     }
 }
