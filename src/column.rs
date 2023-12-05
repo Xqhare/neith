@@ -68,6 +68,9 @@ impl Column {
     pub fn delete_data(&mut self, index: usize) -> Success {
         return self.contents.delete_data(index);
     }
+    pub fn update_data(&mut self, index: usize, value: Data) -> Success {
+        return self.contents.update_data(index, value);
+    }
 }
 
 impl ColumnData {
@@ -77,6 +80,11 @@ impl ColumnData {
     }
     pub fn delete_data(&mut self, index: usize) -> Success {
         let _ = self.all_row_data.remove(index);
+        return Success::SuccessMessage(true);
+    }
+    pub fn update_data(&mut self, index: usize, value: Data) -> Success {
+        let _ = self.delete_data(index);
+        self.all_row_data.insert(index, value);
         return Success::SuccessMessage(true);
     }
 }
