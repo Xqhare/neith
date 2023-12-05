@@ -234,7 +234,7 @@ impl Neith {
                 println!("UPDATE: {:?}", query);
                 return Ok(true);
             },
-        "select" => {
+            "select" => {
                 println!("SELECT: {:?}", query);
                 return Ok(true);
             },
