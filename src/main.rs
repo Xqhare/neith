@@ -283,7 +283,16 @@ impl Neith {
             "get" => {
                 let command_lvl2 = strip_leading_word(command_lvl1.1);
                 match command_lvl2.0.as_str() {
-                    "min" => {},
+                    "min" => {
+                        let command_lvl3 = strip_leading_word(command_lvl2.1);
+                        let columnname = command_lvl3.0;
+                        let command_lvl4 = strip_leading_word(command_lvl3.1);
+                        if command_lvl4.0.contains("from") {
+                            
+                        } else {
+                            return Err(Error::other(format!("Invalid nql syntax. {:?} should be one 'from'", command_lvl4.0)));
+                        }
+                    },
                     "max" => {},
                     "len" => {},
                     _ => {
