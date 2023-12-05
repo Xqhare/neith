@@ -285,23 +285,60 @@ impl Neith {
                 match command_lvl2.0.as_str() {
                     "min" => {
                         let command_lvl3 = strip_leading_word(command_lvl2.1);
-                        let columnname = command_lvl3.0;
-                        let command_lvl4 = strip_leading_word(command_lvl3.1);
-                        if command_lvl4.0.contains("from") {
-                            
+                        if command_lvl3.0.contains("in") {
+                            let command_lvl4 = strip_leading_word(command_lvl3.1);
+                            let columnname = command_lvl4.0;
+                            let command_lvl5 = strip_leading_word(command_lvl4.1);
+                            if command_lvl5.0.as_str().contains("from") {
+                                let tablename = command_lvl5.1;
+                                let table_index = self.search_for_table(tablename)?;
+                                let column_index = self.tables[table_index].search_for_column(columnname)?;
+                                let answ = self.tables[table_index].columns[column_index].min();
+                                return Ok(answ);
+                            } else {
+                                return Err(Error::other(format!("Invalid nql syntax. {:?} should be one 'from'", command_lvl5.0)));
+                            }
                         } else {
-                            return Err(Error::other(format!("Invalid nql syntax. {:?} should be one 'from'", command_lvl4.0)));
+                            return Err(Error::other(format!("Invalid nql syntax. {:?} should be one 'in'", command_lvl3.0)));
+                        }
+                        
+                    },
+                    "max" => {
+                        let command_lvl3 = strip_leading_word(command_lvl2.1);
+                        if command_lvl3.0.contains("in") {
+                            let command_lvl4 = strip_leading_word(command_lvl3.1);
+                            let columnname = command_lvl4.0;
+                            let command_lvl5 = strip_leading_word(command_lvl4.1);
+                            if command_lvl5.0.as_str().contains("from") {
+                                let tablename = command_lvl5.1;
+                                let table_index = self.search_for_table(tablename)?;
+                                let column_index = self.tables[table_index].search_for_column(columnname)?;
+                                let answ = self.tables[table_index].columns[column_index].max();
+                                return Ok(answ);
+                            } else {
+                                return Err(Error::other(format!("Invalid nql syntax. {:?} should be one 'from'", command_lvl5.0)));
+                            }
+                        } else {
+                            return Err(Error::other(format!("Invalid nql syntax. {:?} should be one 'in'", command_lvl3.0)));
                         }
                     },
-                    "max" => {},
-                    "len" => {},
+                    "len" => {
+                        let command_lvl3 = strip_leading_word(command_lvl2.1);
+                        if command_lvl3.0.contains("of") {
+                            let command_lvl4 = strip_leading_word(command_lvl3.1);
+                            let tablename = command_lvl4.0;
+                            let table_index = self.search_for_table(tablename)?;
+                            let answ = self.tables[table_index].len();
+                            return Ok(Success::Length(answ));
+                        } else {
+                            return Err(Error::other(format!("Invalid nql syntax. {:?} should be one 'of'", command_lvl3.0)));
+                        }
+                    },
                     _ => {
                             return Err(Error::other(format!("Invalid nql syntax. {:?} should be one of [min/max/len]", command_lvl2.0)));
                         },
-                }
-                println!("GET: {:?}", query);
-                return Err(Error::other("Invalid nql syntax."));
-            },
+                    }
+                },
             _ => { 
                 println!("ERROR: {:?} | {:?} | {:?}", query, command_lvl1.0, command_lvl1.1);
                 return Err(Error::other("Invalid nql syntax."));
@@ -419,10 +456,20 @@ fn main() {
     let _ = con.execute("update testtable where [column1 = 3] with (column7 = this was updated!)");
     let answ = con.execute("select * from testtable where [column1 = 1, or column1 = 3]");
     let answ2 = con.execute("select (column7, column1) from testtable where [column1 = 3]");
+    let min = con.execute("get min in column1 from testtable");
+    let min2 = con.execute("get min in column7 from testtable");
+    let min3 = con.execute("get min in column5 from testtable");
+    let max = con.execute("get max in column1 from testtable");
+    let len = con.execute("get len of testtable");
     println!("==========");
     println!("{:?}", answ.unwrap());
     println!("{:?}", answ2.unwrap());
     println!("==========");
+    println!("MIN COL1 = {:?}", min);
+    println!("MIN COL7 = {:?}", min2);
+    println!("MIN COL5 = {:?}", min3);
+    println!("MAX COL1 = {:?}", max);
+    println!("LEN = {:?}", len);
     println!("{:?} | {:?}", new_table, new_columns);
     for table in con.tables.clone() {
         println!("TABLE: {:?}", table.name);
