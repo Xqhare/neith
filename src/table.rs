@@ -86,7 +86,6 @@ impl Table {
     }
     pub fn select_data(self, coulumn_names: Vec<String>, indicies: Vec<usize>) -> Success {
         let mut found_data: Vec<Data> = Vec::new();
-        println!("DOG {:?} | {:?}", coulumn_names, indicies);
         if coulumn_names.contains(&"*".to_string()) {
             for column in self.columns {
                 for index in indicies.clone() {
@@ -96,7 +95,6 @@ impl Table {
         } else {
             for column in self.columns {
                 if coulumn_names.contains(&column.name) {
-                    println!("DOG FOUND {:?} IN {:?}", column.name, coulumn_names);
                     for index in indicies.clone() {
                         found_data.push(column.contents.all_row_data[index].clone());
                     }
