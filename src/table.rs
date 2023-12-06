@@ -47,7 +47,7 @@ impl From<(String, Vec<(String, bool)>)> for Table {
     }
 }
 
-impl Table {
+impl Table { 
     pub fn new_columns(&mut self, value: Vec<(String, bool)>) -> Success {
         for entry in value {
             let new_column = Column::from(entry);
