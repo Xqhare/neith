@@ -2,8 +2,7 @@ use std::io::Error;
 
 use json::JsonValue;
 
-use crate::{column::Column, success::Success, data::Data, utils::util};
-
+use crate::{column::Column, success::Success, data::Data};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Table {
@@ -49,10 +48,6 @@ impl From<(String, Vec<(String, bool)>)> for Table {
 }
 
 impl Table {
-    pub fn new(name: String) -> Self {
-        let columns: Vec<Column> = Vec::new();
-        return Table {name, columns, };
-    }
     pub fn new_columns(&mut self, value: Vec<(String, bool)>) -> Success {
         for entry in value {
             let new_column = Column::from(entry);
@@ -79,7 +74,6 @@ impl Table {
                         }
                     }
                 }
-                
             }
         }
         return Ok(Success::SuccessMessage(true));
@@ -102,7 +96,6 @@ impl Table {
             }
         }
         return Success::Result(found_data);
-        
     }
     pub fn new_data(&mut self, value: Vec<(String, Data)>) -> Result<Success, Error> {
         let name_vec: Vec<String> = value.iter().map(|entry| {entry.0.clone()}).collect();
@@ -155,5 +148,4 @@ impl Table {
         return self.columns[0].contents.all_row_data.len();
     }
 }
-
 
