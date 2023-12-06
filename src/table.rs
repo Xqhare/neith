@@ -75,7 +75,7 @@ impl Table {
                 for index in indicies.clone() {
                     for entry in value.clone() {
                         if column.name == entry.0 {
-                            let _ = column.update_data(index, entry.1);
+                            let _ = column.update_data(index, entry.1)?;
                         }
                     }
                 }
@@ -104,20 +104,20 @@ impl Table {
         return Success::Result(found_data);
         
     }
-    pub fn new_data(&mut self, value: Vec<(String, Data)>) -> Success {
+    pub fn new_data(&mut self, value: Vec<(String, Data)>) -> Result<Success, Error> {
         let name_vec: Vec<String> = value.iter().map(|entry| {entry.0.clone()}).collect();
         for column in &mut self.columns {
             if name_vec.contains(&column.name) {
                 for entry in value.clone() {
                     if column.name == entry.0 {
-                        let _ = column.new_data(entry.1);
+                        let _answ = column.new_data(entry.1)?;
                     }
                 }
             } else {
-                let _ = column.new_data(Data::Null());
+                let _ = column.new_data(Data::Null())?;
             }
         }
-        return Success::SuccessMessage(true);
+        return Ok(Success::SuccessMessage(true));
     }
     pub fn search_for_column(&self, columnname: String) -> Result<usize, Error> {
         let mut counter: usize = 0;
