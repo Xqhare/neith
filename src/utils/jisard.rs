@@ -1,9 +1,9 @@
 // This is the Json-Wizard or Jisard for short.
 
 use json::*;
-use std::{io::{Read, Write, Error, self}, fs::{File, self}, path::Path};
+use std::{io::Read, fs::{File, self}, path::Path};
 
-use crate::{Neith, data::{Data, self}, success::Success};
+use crate::{Neith, data::Data, success::Success};
 
 pub fn read_json_from_neithdb_file<P>(filename: P) -> JsonValue where P: AsRef<Path> {
     let mut input = File::open(filename).expect("Unable to open file!");
@@ -23,7 +23,7 @@ pub fn write_neithdb_file(neith: Neith) -> Result<Success> {
     for table in neith.tables {
         let tablename = table.name;
         println!("{:?}", tablename);
-        let mut json_columns = JsonValue::new_object();
+        let mut json_table = JsonValue::new_object();
         for column in table.columns {
             let columnname = column.name;
             let unique = column.unique;
@@ -33,10 +33,12 @@ pub fn write_neithdb_file(neith: Neith) -> Result<Success> {
             for data in column.contents.all_row_data {
                 let _answ = data_array.push(decode_data_to_jsonval(data))?;
             }
-            let _answ0 = json_columns.insert("unique", JsonValue::Boolean(unique))?;
-            let _answ1 = json_columns.insert(&columnname, data_array)?;
+            let mut json_column = JsonValue::new_object();
+            let _answ0 = json_column.insert("unique", JsonValue::Boolean(unique))?;
+            let _answ1 = json_column.insert("entry", data_array)?;
+            let _answ3 = json_table.insert(&columnname, json_column)?;
         }
-        let _answ2 = json_tables.insert(&tablename, json_columns)?;
+        let _answ2 = json_tables.insert(&tablename, json_table)?;
     }
     let file = fs::File::create(neith.path);
     let _fin = json_tables.write(&mut file.unwrap()).unwrap();
@@ -86,27 +88,27 @@ fn decode_data_to_jsonval(neith_data: crate::Data) -> JsonValue {
                                             if thing4.is_list() {
                                                 let mut array4 = JsonValue::new_array();
                                                 for thing5 in thing4.get_list().unwrap() {
-                                                    array4.push(make_json_val(thing5));
+                                                    let _ = array4.push(make_json_val(thing5));
                                                 }
-                                                array3.push(array4);
+                                                let _ = array3.push(array4);
                                             }
-                                            array3.push(make_json_val(thing4));
+                                            let _ = array3.push(make_json_val(thing4));
                                         }
-                                        array2.push(array3);
+                                        let _ = array2.push(array3);
                                     }
-                                    array2.push(make_json_val(thing3));
+                                    let _ = array2.push(make_json_val(thing3));
                                 }
-                                array1.push(array2);
+                                let _ = array1.push(array2);
                             }
-                            array1.push(make_json_val(thing2));
+                            let _ = array1.push(make_json_val(thing2));
                         }
-                        array0.push(array1);
+                        let _ = array0.push(array1);
                     }
-                    array0.push(make_json_val(thing));
+                    let _ = array0.push(make_json_val(thing));
                 }
-                array.push(array0);
+                let _ = array.push(array0);
             }
-            array.push(make_json_val(data));
+            let _ = array.push(make_json_val(data));
         }
         return array;
     }
