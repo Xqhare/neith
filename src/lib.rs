@@ -70,6 +70,10 @@ impl Neith {
         let job_history_table_index = None;
         return Neith{ tables, path, ram_mode, job_history, job_history_table_index};
     }
+    /// Creates the connection to your database. Most if not all programs will start with this.
+    /// ```
+    /// let con = neith.connect("myDBname");
+    /// ```
     pub fn connect<P>(filename: P) -> Self where P: AsRef<Path> + Clone, PathBuf: From<P> {
         let path = canonize_path(filename.into());
         if check_for_persistant_db(path.clone()) {
@@ -80,14 +84,13 @@ impl Neith {
             return connection;
         }
     }
-    // TODO: LEAVE THIS LAST. Its really only a flag put on top of everything, as Neith loads
-    // everything into memory anyway, so I just need to not save the data below.
-    // WIP Ram only mode -> no saving, all data is lost on shutdown!
+    /// Connect in ram mode. No way to save even if you want to!
     pub fn connect_ram_mode(job_history: bool) -> Self {
         let mut connection = Neith::default();
         let _ = connection.set_job_history(job_history);
         return connection;
     }
+    /// A toggle for job-history, set to true to record, set to false to not record.
     pub fn set_job_history(&mut self, value: bool) -> Success {
         self.job_history = value;
         if self.check_exsistance("job_history".to_string()) && self.job_history {
@@ -104,6 +107,7 @@ impl Neith {
         }
         return Success::SuccessMessage(value);
     }
+    /// Saves the current state of the database to disc.
     pub fn save(self) -> Result<Success, json::JsonError> {
         return write_neithdb_file(self);
     }
@@ -133,6 +137,17 @@ impl Neith {
     //
     // For returning the query or a success message, I could wrap another custom wrapper in Result,
     // e.g. Result<NeithAnswer, io::Error>
+
+    /// Execute is the main function for interaction. For the query syntax in nql please consult
+    /// the readme.
+    ///
+    /// ## Returns
+    /// This function will always return someting, be it a simple `SuccessMessage` to let you know,
+    /// or your requested data.
+    ///
+    /// ## Errors
+    /// This function has many different ways to error. Please read the error message carefully, as
+    /// it contains important information in most cases.
     pub fn execute(&mut self, query: &str) -> Result<Success, io::Error> {
         // Conditional variables for job_history
         let start = Instant::now();
@@ -454,6 +469,7 @@ impl Neith {
             },
         }
     }
+    /// Check if a table exists. returns `true` if it is found, `false` otherwise.
     pub fn check_exsistance(&self, name: String) -> bool {
         for table in &self.tables {
             if table.name == name {
