@@ -1,4 +1,4 @@
-use std::{io::Error, str::FromStr};
+use std::io::Error;
 
 use json::JsonValue;
 
@@ -103,16 +103,16 @@ impl Data {
     }
     pub fn get_type(&self) -> String {
         match self {
-            Self::List(anything) => {
+            Self::List(_anything) => {
                 return "List".to_string();
             },
-            Self::Float(anything) => {
+            Self::Float(_anything) => {
                 return "Float".to_string();
             },
-            Self::Bool(maybe) => {
+            Self::Bool(_maybe) => {
                 return "Bool".to_string();
             },
-            Self::String(anything) => {
+            Self::String(_anything) => {
                 return "String".to_string();
             },
             Self::Null() => {
