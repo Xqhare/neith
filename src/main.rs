@@ -21,6 +21,7 @@ use crate::table::Table;
 use crate::utils::jisard;
 use jisard::read_json_from_neithdb_file;
 use success::Success;
+use utils::{util, jisard::write_neithdb_file};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Neith {
@@ -59,10 +60,9 @@ impl From<PathBuf> for Neith {
 impl Neith {
     /// Creates a new Neith instance, with no contents.
     /// For general use, `connect(filename)` is highly recommended.
-    pub fn new(value: PathBuf, ram_mode: bool) -> Self {
+    pub fn new(value: PathBuf, ram_mode: bool, job_history: bool) -> Self {
         let path = canonize_path(value);
         let tables: Vec<Table> = Vec::new();
-        let job_history = false;
         return Neith{ tables, path, ram_mode, job_history,};
     }
     pub fn connect<P>(filename: P) -> Self where P: AsRef<Path> + Clone, PathBuf: From<P> {
@@ -71,24 +71,21 @@ impl Neith {
             let connection = Neith::from(path);
             return connection;
         } else {
-            let connection = Neith::new(path, false);
+            let connection = Neith::new(path, false, false);
             return connection;
         }
     }
     // TODO: LEAVE THIS LAST. Its really only a flag put on top of everything, as Neith loads
     // everything into memory anyway, so I just need to not save the data below.
     // WIP Ram only mode -> no saving, all data is lost on shutdown!
-    pub fn connect_ram_mode<P>(_connection_name: P) -> Self where P: AsRef<Path> + Clone, PathBuf: From<P> {
-        let _connection = Neith::default();
-        unimplemented!();
+    pub fn connect_ram_mode(job_history: bool) -> Self {
+        let mut connection = Neith::default();
+        let _ = connection.set_job_history(job_history);
+        return connection;
     }
-    pub fn set_job_history(&mut self, value: bool) -> Result<Success, Error> {
-        self.job_history == value;
-        if self.job_history == value {
-            return Ok(Success::SuccessMessage(true));
-        } else {
-            return Err(Error::other(format!("Couldn't set job history. Was {:?} tried to set to {:?}", self.job_history, value)));
-        }
+    pub fn set_job_history(&mut self, value: bool) -> Success {
+        self.job_history = value;
+        return Success::SuccessMessage(value);
     }
     pub fn save(&mut self) -> Success {
         unimplemented!()
@@ -160,7 +157,7 @@ impl Neith {
                         let command_lvl4 = command_lvl3.1.clone();
                         let decoded = decode_list_columndata(command_lvl4).unwrap();
                         let table_index = self.search_for_table(tablename)?;
-                        let answ = self.tables[table_index].new_data(decoded);
+                        let answ = self.tables[table_index].new_data(decoded)?;
                         if answ == Success::SuccessMessage(true) {
                             return Ok(answ);
                         } else {
@@ -329,7 +326,10 @@ impl Neith {
                             let tablename = command_lvl4.0;
                             let table_index = self.search_for_table(tablename)?;
                             let answ = self.tables[table_index].len();
-                            return Ok(Success::Length(answ));
+                            // This is stupid and I love it!
+                            let temp_str = answ.to_string();
+                            let encoded_data = vec![Data::from(temp_str)];
+                            return Ok(Success::Result(encoded_data));
                         } else {
                             return Err(Error::other(format!("Invalid nql syntax. {:?} should be one 'of'", command_lvl3.0)));
                         }
@@ -449,11 +449,11 @@ fn main() {
     let _ = con.execute("new column testtable with (column8 false)");
     let new_data_column1 = con.execute("new data testtable (column1 = 1, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text)), column6 = this will be deleted!");
     let new_data_column2 = con.execute("new data testtable (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
-    let _ = con.execute("delete table with table_name0");
-    let _ = con.execute("delete column with column6 in testtable");
-    let _ = con.execute("delete data in testtable where [column1 = 2, and column3 = true]"); 
-    let _ = con.execute("new data testtable (column1 = 3, column2 = 1, column3 = false, column4 = some, column7 = this will not be deleted!)");
-    let _ = con.execute("update testtable where [column1 = 3] with (column7 = this was updated!)");
+    // let _ = con.execute("delete table with table_name0");
+    // let _ = con.execute("delete column with column6 in testtable");
+    // let _ = con.execute("delete data in testtable where [column1 = 2, and column3 = true]"); 
+    let newdata = con.execute("new data testtable (column1 = 3, column2 = 1, column3 = false, column4 = some, column7 = this will not be deleted!)");
+    let upd = con.execute("update testtable where [column1 = 3] with (column7 = this was updated!)");
     let answ = con.execute("select * from testtable where [column1 = 1, or column1 = 3]");
     let answ2 = con.execute("select (column7, column1) from testtable where [column1 = 3]");
     let min = con.execute("get min in column1 from testtable");
@@ -461,7 +461,7 @@ fn main() {
     let min3 = con.execute("get min in column5 from testtable");
     let max = con.execute("get max in column1 from testtable");
     let len = con.execute("get len of testtable");
-    println!("==========");
+    /* println!("==========");
     println!("{:?}", answ.unwrap());
     println!("{:?}", answ2.unwrap());
     println!("==========");
@@ -480,5 +480,6 @@ fn main() {
     println!("---");
     println!("{:?}", con.tables);
     println!("---");
-    println!("{:?} | {:?}", new_data_column1, new_data_column2)
+    println!("{:?} | {:?}", new_data_column1, new_data_column2) */
+    write_neithdb_file(con);
 }
