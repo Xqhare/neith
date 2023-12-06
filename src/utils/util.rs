@@ -1,7 +1,7 @@
 
 use std::{path::PathBuf, io::Error};
 
-use crate::{data::Data, success::Success, table::Table};
+use crate::{data::Data, table::Table};
 
 // write a decoder for every code step 
 pub fn strip_leading_word(to_strip: String) -> (String, String) {
