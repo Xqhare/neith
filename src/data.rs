@@ -46,6 +46,80 @@ impl From<String> for Data {
 }
 
 impl Data {
+    
+    pub fn is_null(&self) -> bool {
+        match self {
+            Self::Null() => true,
+            _ => false,
+        }
+    }
+    pub fn is_string(&self) -> bool {
+        match self {
+            Self::String(_contents) => true,
+            _ => false,
+        }
+    }
+    pub fn get_string(&self) -> Option<String> {
+        match self {
+            Self::String(contents) => Some(contents.to_owned()),
+            _ => None,
+        }
+    }
+    pub fn is_bool(&self) -> bool {
+        match self {
+            Self::Bool(_contents) => true,
+            _ => false,
+        }
+    }
+    pub fn get_bool(&self) -> Option<bool> {
+        match self {
+            Self::Bool(contents) => Some(contents.to_owned()),
+            _ => None,
+        }
+    }
+    pub fn is_float(&self) -> bool {
+        match self {
+            Self::Float(_contents) => true,
+            _ => false,
+        }
+    }
+    pub fn get_float(&self) -> Option<f64> {
+        match self {
+            Self::Float(contents) => Some(contents.to_owned()),
+            _ => None,
+        }
+    }
+    pub fn is_list(&self) -> bool {
+        match self {
+            Self::List(_contents) => true,
+            _ => false,
+        }
+    }
+    pub fn get_list(&self) -> Option<Vec<Data>> {
+        match self {
+            Self::List(contents) => Some(contents.to_owned()),
+            _ => None,
+        }
+    }
+    pub fn get_type(&self) -> String {
+        match self {
+            Self::List(anything) => {
+                return "List".to_string();
+            },
+            Self::Float(anything) => {
+                return "Float".to_string();
+            },
+            Self::Bool(maybe) => {
+                return "Bool".to_string();
+            },
+            Self::String(anything) => {
+                return "String".to_string();
+            },
+            Self::Null() => {
+                return "Null".to_string();
+            },
+        }
+    }
     fn from_single_for_list(value: String) -> Self {
         let bool_test = value.parse::<bool>();
         if bool_test.is_ok() {
@@ -82,6 +156,9 @@ impl Data {
             } else {
                 return Ok(Self::String(out.unwrap()));
             }
+        }
+        if value.is_null() {
+            return Ok(Self::Null());
         }
         return Err(Error::other("Failure to read json value"));
     }
