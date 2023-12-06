@@ -4,6 +4,4 @@ use crate::data::Data;
 pub enum Success {
     SuccessMessage(bool),
     Result(Vec<Data>),
-    Length(usize),
 }
-
