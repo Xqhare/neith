@@ -144,6 +144,7 @@ impl Table {
             return Err(Error::other("No data found!"));
         }
     }
+    /// Gives the number of rows in the table.
     pub fn len(&self) -> usize {
         return self.columns[0].contents.all_row_data.len();
     }
