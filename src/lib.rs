@@ -1,6 +1,7 @@
-
 #![feature(iter_intersperse)]
-use std::{io::{self, Error}, path::{Path, PathBuf}};
+use std::{io::{self, Error}, path::{Path, PathBuf}, time::Instant};
+
+use chrono;
 
 use crate::{utils::util::{*}, data::Data};
 
@@ -28,6 +29,7 @@ pub struct Neith {
     path: PathBuf,
     ram_mode: bool,
     job_history: bool,
+    job_history_table_index: Option<usize>,
     tables: Vec<Table>,
 }
 
@@ -36,8 +38,9 @@ impl Default for Neith {
         let tables: Vec<Table> = Vec::new();
         let ram_mode = true;
         let job_history = false;
+        let job_history_table_index = None;
         let path = PathBuf::new();
-        return Neith{ tables, path, ram_mode, job_history,};
+        return Neith{ tables, path, ram_mode, job_history, job_history_table_index};
     }
     
 }
@@ -49,11 +52,12 @@ impl From<PathBuf> for Neith {
         let mut tables: Vec<Table> = Vec::new();
         let ram_mode = false;
         let job_history = false;
+        let job_history_table_index = None;
         for table in read_file.entries() {
             let table = Table::from(table);
             tables.push(table);
         }
-        return Neith{ tables, path, ram_mode, job_history,};
+        return Neith{ tables, path, ram_mode, job_history, job_history_table_index};
     }
 }
 
@@ -63,7 +67,8 @@ impl Neith {
     pub fn new(value: PathBuf, ram_mode: bool, job_history: bool) -> Self {
         let path = canonize_path(value);
         let tables: Vec<Table> = Vec::new();
-        return Neith{ tables, path, ram_mode, job_history,};
+        let job_history_table_index = None;
+        return Neith{ tables, path, ram_mode, job_history, job_history_table_index};
     }
     pub fn connect<P>(filename: P) -> Self where P: AsRef<Path> + Clone, PathBuf: From<P> {
         let path = canonize_path(filename.into());
@@ -85,6 +90,18 @@ impl Neith {
     }
     pub fn set_job_history(&mut self, value: bool) -> Success {
         self.job_history = value;
+        if self.check_exsistance("job_history".to_string()) && self.job_history {
+            let index = self.search_for_table("job_history".to_string()).unwrap();
+            self.job_history_table_index = Some(index);
+            return Success::SuccessMessage(value);
+        } else if !self.check_exsistance("job_history".to_string()) && self.job_history {
+            let table_columns: Vec<(String, bool)> = vec![("id".to_string(), true), ("command".to_string(), false), ("time".to_string(), false), ("duration".to_string(), false)];
+            let table_prop = ("job_history".to_string(), table_columns);
+            let job_history_table = Table::from(table_prop);
+            self.tables.push(job_history_table);
+            // Table len == number of elements. element 1 == index 0
+            self.job_history_table_index = Some(self.tables.len().saturating_sub(1));
+        }
         return Success::SuccessMessage(value);
     }
     pub fn save(self) -> Result<Success, json::JsonError> {
@@ -117,8 +134,12 @@ impl Neith {
     // For returning the query or a success message, I could wrap another custom wrapper in Result,
     // e.g. Result<NeithAnswer, io::Error>
     pub fn execute(&mut self, query: &str) -> Result<Success, io::Error> {
+        // Conditional variables for job_history
+        let start = Instant::now();
+        let date = chrono::Utc::now().to_rfc3339();
+        // Real execute starts here:
         let binding = Into::<String>::into(query);
-        let command_lvl1 = strip_leading_word(binding);
+        let command_lvl1 = strip_leading_word(binding.clone());
         match command_lvl1.0.as_str() {
             "new" => {
                 let command_lvl2 = strip_leading_word(command_lvl1.1);
@@ -131,6 +152,14 @@ impl Neith {
                             let columns = decode_columnmaker(command_lvl4.1).unwrap();
                             let answ = Table::from((tablename, columns));
                             self.tables.push(answ);
+                            if self.job_history {
+                                // I use length => no need to add +1, len does that by
+                                // itself.
+                                let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
+                                let duration = start.elapsed().as_millis().to_string();
+                                let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                                let _ = self.tables[self.job_history_table_index.unwrap()].new_data(decoded)?;
+                            }
                             // Successful decoding of syntax!
                             return Ok(Success::SuccessMessage(true));
                         } else {
@@ -143,6 +172,14 @@ impl Neith {
                             let columns = decode_columnmaker(command_lvl4.1).unwrap();
                             let table_index = self.search_for_table(tablename)?;
                             let answ = self.tables[table_index].new_columns(columns);
+                            if self.job_history {
+                                // I use length => no need to add +1, len does that by
+                                // itself.
+                                let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
+                                let duration = start.elapsed().as_millis().to_string();
+                                let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                                let _ = self.tables[self.job_history_table_index.unwrap()].new_data(decoded)?;
+                            }
                             // Successful decoding of syntax!
                             if answ == Success::SuccessMessage(true) {
                                 return Ok(answ);
@@ -159,6 +196,14 @@ impl Neith {
                         let table_index = self.search_for_table(tablename)?;
                         let answ = self.tables[table_index].new_data(decoded)?;
                         if answ == Success::SuccessMessage(true) {
+                           if self.job_history {
+                                // I use length => no need to add +1, len does that by
+                                // itself.
+                                let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
+                                let duration = start.elapsed().as_millis().to_string();
+                                let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                                let _ = self.tables[self.job_history_table_index.unwrap()].new_data(decoded)?;
+                            }
                             return Ok(answ);
                         } else {
                             return Err(Error::other("Invalid nql syntax."));
@@ -177,6 +222,14 @@ impl Neith {
                             let tablename = command_lvl3.1;
                             let answ = self.delete_table(tablename);
                             if answ.is_ok() {
+                                if self.job_history {
+                                    // I use length => no need to add +1, len does that by
+                                    // itself.
+                                    let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
+                                    let duration = start.elapsed().as_millis().to_string();
+                                    let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                                    let _ = self.tables[self.job_history_table_index.unwrap()].new_data(decoded)?;
+                                }
                                 return Ok(answ.unwrap());
                             } else {
                                 return Err(Error::other("Invalid nql syntax."));
@@ -195,6 +248,14 @@ impl Neith {
                                 let tablename = command_lvl5.1;
                                 let answ = self.delete_column(tablename, columnname);
                                 if answ.is_ok() {
+                                    if self.job_history {
+                                        // I use length => no need to add +1, len does that by
+                                        // itself.
+                                        let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
+                                        let duration = start.elapsed().as_millis().to_string();
+                                        let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                                        let _ = self.tables[self.job_history_table_index.unwrap()].new_data(decoded)?;
+                                    }
                                     return Ok(answ.unwrap());
                                 } else {
                                     return Err(Error::other("Invalid nql syntax."));
@@ -218,6 +279,14 @@ impl Neith {
                                 let finished_search = self.search_conditionals(conditions, table_index)?;
                                 let answ = self.tables[table_index].delete_data(finished_search);
                                 if answ.is_ok() {
+                                    if self.job_history {
+                                        // I use length => no need to add +1, len does that by
+                                        // itself.
+                                        let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
+                                        let duration = start.elapsed().as_millis().to_string();
+                                        let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                                        let _ = self.tables[self.job_history_table_index.unwrap()].new_data(decoded)?;
+                                    }
                                     return Ok(answ.unwrap());
                                 } else {
                                     return Err(Error::other("Invalid nql syntax."));
@@ -245,6 +314,14 @@ impl Neith {
                         let table_index = self.search_for_table(tablename)?;
                         let search = self.search_conditionals(conditions, table_index)?;
                         let answ = self.tables[table_index].update_data(decoded_list, search)?;
+                        if self.job_history {
+                            // I use length => no need to add +1, len does that by
+                            // itself.
+                            let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
+                            let duration = start.elapsed().as_millis().to_string();
+                            let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                            let _ = self.tables[self.job_history_table_index.unwrap()].new_data(decoded)?;
+                        }
                         match answ {
                             Success::SuccessMessage(true) => return Ok(answ),
                             _ => return Err(Error::other(format!("Invalid nql syntax."))),
@@ -269,6 +346,14 @@ impl Neith {
                         let conditions = command_lvl5.1;
                         let search = self.search_conditionals(conditions.clone(), table_index)?;
                         let answ = self.tables[table_index].clone().select_data(decoded_column_list.clone(), search.clone());
+                        if self.job_history {
+                            // I use length => no need to add +1, len does that by
+                            // itself.
+                            let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
+                            let duration = start.elapsed().as_millis().to_string();
+                            let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                            let _ = self.tables[self.job_history_table_index.unwrap()].new_data(decoded)?;
+                        }
                         return Ok(answ);
                     } else {
                         return Err(Error::other(format!("Invalid nql syntax. {:?} should be 'where'", command_lvl5.1)));
@@ -291,6 +376,14 @@ impl Neith {
                                 let table_index = self.search_for_table(tablename)?;
                                 let column_index = self.tables[table_index].search_for_column(columnname)?;
                                 let answ = self.tables[table_index].columns[column_index].min();
+                                if self.job_history {
+                                    // I use length => no need to add +1, len does that by
+                                    // itself.
+                                    let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
+                                    let duration = start.elapsed().as_millis().to_string();
+                                    let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                                    let _ = self.tables[self.job_history_table_index.unwrap()].new_data(decoded)?;
+                                }
                                 return Ok(answ);
                             } else {
                                 return Err(Error::other(format!("Invalid nql syntax. {:?} should be one 'from'", command_lvl5.0)));
@@ -311,6 +404,14 @@ impl Neith {
                                 let table_index = self.search_for_table(tablename)?;
                                 let column_index = self.tables[table_index].search_for_column(columnname)?;
                                 let answ = self.tables[table_index].columns[column_index].max();
+                                if self.job_history {
+                                    // I use length => no need to add +1, len does that by
+                                    // itself.
+                                    let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
+                                    let duration = start.elapsed().as_millis().to_string();
+                                    let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                                    let _ = self.tables[self.job_history_table_index.unwrap()].new_data(decoded)?;
+                                }
                                 return Ok(answ);
                             } else {
                                 return Err(Error::other(format!("Invalid nql syntax. {:?} should be one 'from'", command_lvl5.0)));
@@ -329,6 +430,14 @@ impl Neith {
                             // This is stupid and I love it!
                             let temp_str = answ.to_string();
                             let encoded_data = vec![Data::from(temp_str)];
+                            if self.job_history {
+                                    // I use length => no need to add +1, len does that by
+                                    // itself.
+                                    let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
+                                    let duration = start.elapsed().as_millis().to_string();
+                                    let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                                    let _ = self.tables[self.job_history_table_index.unwrap()].new_data(decoded)?;
+                                }
                             return Ok(Success::Result(encoded_data));
                         } else {
                             return Err(Error::other(format!("Invalid nql syntax. {:?} should be one 'of'", command_lvl3.0)));
@@ -344,6 +453,14 @@ impl Neith {
                 return Err(Error::other("Invalid nql syntax."));
             },
         }
+    }
+    pub fn check_exsistance(&self, name: String) -> bool {
+        for table in &self.tables {
+            if table.name == name {
+                return true;
+            }
+        }
+        return false;
     }
     fn search_conditionals(&self, conditions: String, table_index: usize) -> Result<Vec<usize>, Error> {
         let decoded_conditions = decode_list_conditions(conditions)?;
