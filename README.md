@@ -47,6 +47,10 @@ Types are followed by their respective name in the API in parenthesis.
 - Strings (string)
 - Lists of any type (list) -> wrapped in (), e.g. (example, 1, true)
 
+###### On lists
+
+Lists can contain up to five nested lists.
+
 ## API
 Neith has a very simple API. It uses three functions, `connect()`, `execute()`, as well as `close()`.
 The first is only used once to create a connection to the database, any interaction with it is done with the `execute()` function.
@@ -181,25 +185,35 @@ This opens and immmediatly closes (or saves the state of) neith.
 
 WIP BELOW
 
-### "Job-History"-Table
-
-As this feature is experimental, it is off by default.
-It can be turned on by: 
-```
-let con = Neith::connect("test.neithdb");
-let 
-```
+### `job_history`-Table
 
 Neih comes with a 'job-history' table that can be turned on during connection creation. This table saves the following:
 
-- id of job
-- hash of command as a string
-- number of columns searched (if any)
-- number of rows searched (if any) 
-- number of rows changed (if any)
-- created (timestamp with timezone)
-(maybe) -execution duration
+- id (unique)
+- command (the complete command typed in)
+- time (the current date and time to the second)
+- duration (how long the operation took in milliseconds)
 
 This table can be queried just like any other table. You can change the contents too, if you wish. Although that really isn't recommended.
+As this feature is experimental, it is off by default.
 
-As saving of this data can create unwanted ram and cpu overhead, the fearure is, by default, turned off.
+It can be turned on by: 
+
+```
+let con = Neith::connect("test.neithdb");
+let job_his_on = con.set_job_history(true);
+```
+
+#### Notes on using the `job_history`-Table
+
+If you choose to use it, please use `set_job_history(true)` as the first thing after creating the connection.
+If you want to no longer use it, delete the line containing `set_job_history(true)` and also delete the table called `job_history` if you wish to do so.
+To query the `job-history`, just use the `execute()` function as you would with any other table.
+
+###### Notes on the `job_history`-Table
+
+Just treat it as read-only.
+Even though it is not. Trust me.
+The table is writeable, so you could do what you want with it. I would recommend against it though.
+If something breakes it is your fault, I warned you.
+As saving of this data can create unwanted ram and cpu overhead(Not much, however with the small scale of Neith, it could matter to you.), the fearure is, by default, turned off.
