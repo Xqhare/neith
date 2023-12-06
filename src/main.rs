@@ -20,8 +20,8 @@ mod utils;
 use crate::table::Table;
 use crate::utils::jisard;
 use jisard::read_json_from_neithdb_file;
+use utils::jisard::write_neithdb_file;
 use success::Success;
-use utils::{util, jisard::write_neithdb_file};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Neith {
@@ -87,8 +87,8 @@ impl Neith {
         self.job_history = value;
         return Success::SuccessMessage(value);
     }
-    pub fn save(&mut self) -> Success {
-        unimplemented!()
+    pub fn save(self) -> Result<Success, json::JsonError> {
+        return write_neithdb_file(self);
     }
     // This is the general apperance of a mk_table call.
     // mk_table(table_name, column_vec((column_name0, unique_bool, type)), (column_name1, unique_bool, type))
@@ -443,24 +443,24 @@ impl Neith {
 
 fn main() {
     let mut con = Neith::connect("test.neithdb");
-    let job_history = con.set_job_history(true);
-    let new_table = con.execute("new table testtable with (column1 true, column2 false, column3 false)");
-    let new_columns = con.execute("new column testtable with (column4 false, column5 false, column6 false, column7 false)");
+    let _job_history = con.set_job_history(true);
+    let _new_table = con.execute("new table testtable with (column1 true, column2 false, column3 false)");
+    let _new_columns = con.execute("new column testtable with (column4 false, column5 false, column6 false, column7 false)");
     let _ = con.execute("new column testtable with (column8 false)");
-    let new_data_column1 = con.execute("new data testtable (column1 = 1, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text)), column6 = this will be deleted!");
-    let new_data_column2 = con.execute("new data testtable (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
+    let _new_data_column1 = con.execute("new data testtable (column1 = 1, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text)), column6 = this will be deleted!");
+    let _new_data_column2 = con.execute("new data testtable (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
     // let _ = con.execute("delete table with table_name0");
     // let _ = con.execute("delete column with column6 in testtable");
     // let _ = con.execute("delete data in testtable where [column1 = 2, and column3 = true]"); 
-    let newdata = con.execute("new data testtable (column1 = 3, column2 = 1, column3 = false, column4 = some, column7 = this will not be deleted!)");
-    let upd = con.execute("update testtable where [column1 = 3] with (column7 = this was updated!)");
-    let answ = con.execute("select * from testtable where [column1 = 1, or column1 = 3]");
-    let answ2 = con.execute("select (column7, column1) from testtable where [column1 = 3]");
-    let min = con.execute("get min in column1 from testtable");
-    let min2 = con.execute("get min in column7 from testtable");
-    let min3 = con.execute("get min in column5 from testtable");
-    let max = con.execute("get max in column1 from testtable");
-    let len = con.execute("get len of testtable");
+    let _newdata = con.execute("new data testtable (column1 = 3, column2 = 1, column3 = false, column4 = some, column7 = this will not be deleted!)");
+    let _upd = con.execute("update testtable where [column1 = 3] with (column7 = this was updated!)");
+    let _answ = con.execute("select * from testtable where [column1 = 1, or column1 = 3]");
+    let _answ2 = con.execute("select (column7, column1) from testtable where [column1 = 3]");
+    let _min = con.execute("get min in column1 from testtable");
+    let _min2 = con.execute("get min in column7 from testtable");
+    let _min3 = con.execute("get min in column5 from testtable");
+    let _max = con.execute("get max in column1 from testtable");
+    let _len = con.execute("get len of testtable");
     /* println!("==========");
     println!("{:?}", answ.unwrap());
     println!("{:?}", answ2.unwrap());
@@ -481,5 +481,5 @@ fn main() {
     println!("{:?}", con.tables);
     println!("---");
     println!("{:?} | {:?}", new_data_column1, new_data_column2) */
-    write_neithdb_file(con);
+    // let _ = write_neithdb_file(con);
 }
