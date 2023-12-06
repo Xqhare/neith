@@ -64,14 +64,24 @@ impl Column {
         }
         return Column{name, unique, contents: ColumnData { all_row_data}};
     }
-    pub fn new_data(&mut self, value: Data) -> Success {
-        return self.contents.new_data(value);
+    pub fn new_data(&mut self, value: Data) -> Result<Success, Error> {
+        if self.unique {
+            if self.contents.all_row_data.contains(&value) {
+                return Err(Error::other(format!("This column ({:?}) is marked as unique and {:?} was found to be an entry already.", self.name, value)));
+            }
+        }
+        return Ok(self.contents.new_data(value));
     }
     pub fn delete_data(&mut self, index: usize) -> Success {
         return self.contents.delete_data(index);
     }
-    pub fn update_data(&mut self, index: usize, value: Data) -> Success {
-        return self.contents.update_data(index, value);
+    pub fn update_data(&mut self, index: usize, value: Data) -> Result<Success, Error> {
+        if self.unique {
+            if self.contents.all_row_data.contains(&value) {
+                return Err(Error::other(format!("This column ({:?}) is marked as unique and {:?} was found to be an entry already.", self.name, value)));
+            }
+        }
+        return Ok(self.contents.update_data(index, value));
     }
     pub fn min(&self) -> Success {
         return self.contents.min();
