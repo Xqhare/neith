@@ -5,6 +5,10 @@ The name Neith is derived from Neith, the ancient Egyptian goddess of war, creat
 
 Neith is not made for large projects, or projects that need to do a lot of data intensive work. Neith is made for small projects, with the need for some database storage and simple logic. For large datasets more ram is needed as Neith holds the entire database in memory from startup, leading to fast reads and writes (except the save to disc of course). Users are strongly discuraged from using complex api requests, this is mainly because it does not support multicore - maybe at some point, no promises - so performance can be impacted by such requests.
 
+My limited testing and experience has shown that Neith does quite well as long as the complexety and amount of data is managed, a simple table can hold 10k rows and while a slowdown is noticable, it is still acceptable. For more complex tables the row-count is a fair bit lower at around 5-7k.
+Splitting the data up into more tables inside neith can help with performance too! A good rule of thumb is that the shorter the table the better the performance.
+Please note that the more columns a table has, performance is impacted too. However, a table with a few hunderet columns is out of the scope of this project anyway, so just keep it in mind - Neith is like any other database, more data complexity means more compute time.
+
 ## Design and philosophy of Neith
 
 Neith is designed to do what the user or program is telling it, whatever that is. Neith will execute anything passed to it, as long as it can decode it. There is no handholding, Neith will never assume or interpret what the user wants to do, it just does.
