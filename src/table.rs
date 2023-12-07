@@ -127,6 +127,15 @@ impl Table {
         let _ = self.columns.remove(column_index);
         return Ok(Success::SuccessMessage(true));
     }
+    pub fn select_all_column_data(&self) -> Vec<usize> {
+        let mut out: Vec<usize> = Vec::new();
+        let mut counter: usize = 0;
+        for entry in &self.columns {
+            out.push(counter);
+            counter += 1;
+        }
+        return out;
+    }
     /// Returns the index of the data in the column.
     pub fn search_column_data(&self, columnname: String, data: Data) -> Result<Vec<usize>, Error> {
         let column_index = self.search_for_column(columnname.clone())?;
