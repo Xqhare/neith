@@ -46,7 +46,7 @@ pub fn check_for_persistant_db(filename: PathBuf) -> bool {
     }
 }
 pub fn decode_column_list(input: String, table: Table) -> Vec<String> {
-    if input.contains(&"*".to_string()) {
+    if input.contains("*") {
         let mut found_column: Vec<String> = Vec::new();
         for column in table.columns {
             found_column.push(column.name);
