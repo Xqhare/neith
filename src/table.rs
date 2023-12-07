@@ -82,16 +82,20 @@ impl Table {
         let mut found_data: Vec<Data> = Vec::new();
         if coulumn_names.contains(&"*".to_string()) {
             for column in self.columns {
+                let mut colum_data: Vec<Data> = Vec::new();
                 for index in indicies.clone() {
-                    found_data.push(column.contents.all_row_data[index].clone());
+                    colum_data.push(column.contents.all_row_data[index].clone());
                 }
+                found_data.push(Data::List(colum_data));
             }
         } else {
             for column in self.columns {
                 if coulumn_names.contains(&column.name) {
+                    let mut colum_data: Vec<Data> = Vec::new();
                     for index in indicies.clone() {
-                        found_data.push(column.contents.all_row_data[index].clone());
+                        colum_data.push(column.contents.all_row_data[index].clone());
                     }
+                    found_data.push(Data::List(colum_data));
                 }
             }
         }
@@ -103,7 +107,7 @@ impl Table {
             if name_vec.contains(&column.name) {
                 for entry in value.clone() {
                     if column.name == entry.0 {
-                        let _answ = column.new_data(entry.1)?;
+                        let answ = column.new_data(entry.1)?;
                     }
                 }
             } else {
@@ -130,10 +134,10 @@ impl Table {
     pub fn select_all_column_data(&self) -> Vec<usize> {
         let mut out: Vec<usize> = Vec::new();
         let mut counter: usize = 0;
-        for entry in &self.columns {
-            out.push(counter);
-            counter += 1;
-        }
+        for _row in &self.columns[0].contents.all_row_data {
+                out.push(counter);
+                counter += 1;
+            }
         return out;
     }
     /// Returns the index of the data in the column.
