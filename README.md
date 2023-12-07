@@ -191,8 +191,8 @@ Neih comes with a 'job-history' table that can be turned on during connection cr
 
 - id (unique)
 - command (the complete command typed in)
-- time (the current date and time to the second)
-- duration (how long the operation took in milliseconds)
+- time (the current date and time to the nanosecond)
+- duration (how long the operation took in microseconds)
 
 This table can be queried just like any other table. You can change the contents too, if you wish. Although that really isn't recommended.
 As this feature is experimental, it is off by default.
