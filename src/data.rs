@@ -46,7 +46,6 @@ impl From<String> for Data {
 }
 
 impl Data {
-    
     pub fn is_null(&self) -> bool {
         match self {
             Self::Null() => true,
