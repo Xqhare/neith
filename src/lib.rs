@@ -355,9 +355,21 @@ impl Neith {
                     let command_lvl4 = strip_leading_word(command_lvl3.1);
                     let tablename = command_lvl4.0;
                     let table_index = self.search_for_table(tablename)?;
-                    let decoded_column_list: Vec<String> = decode_column_list(command_lvl2.0, self.tables[table_index].clone());
+                    let decoded_column_list: Vec<String> = decode_column_list(command_lvl2.0.clone(), self.tables[table_index].clone());
                     let command_lvl5 = strip_leading_word(command_lvl4.1);
-                    if command_lvl5.0.as_str().contains("where") {
+                    if command_lvl2.0.as_str().contains("*") {
+                        let search = <Neith as Clone>::clone(&self).select_all_columns(table_index);
+                        let answ = self.tables[table_index].clone().select_data(decoded_column_list.clone(), search.clone());
+                        if self.job_history {
+                            // I use length => no need to add +1, len does that by
+                            // itself.
+                            let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
+                            let duration = start.elapsed().as_millis().to_string();
+                            let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                            let _ = self.tables[self.job_history_table_index.unwrap()].new_data(decoded)?;
+                        }
+                        return Ok(answ); 
+                    } else if command_lvl5.0.as_str().contains("where") {
                         let conditions = command_lvl5.1;
                         let search = self.search_conditionals(conditions.clone(), table_index)?;
                         let answ = self.tables[table_index].clone().select_data(decoded_column_list.clone(), search.clone());
@@ -477,6 +489,10 @@ impl Neith {
             }
         }
         return false;
+    }
+    fn select_all_columns(self, table_index: usize) -> Vec<usize> {
+        let mut indices: Vec<usize> = Vec::new();
+        return self.tables[table_index].select_all_column_data();
     }
     fn search_conditionals(&self, conditions: String, table_index: usize) -> Result<Vec<usize>, Error> {
         let decoded_conditions = decode_list_conditions(conditions)?;
