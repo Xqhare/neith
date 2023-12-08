@@ -105,9 +105,9 @@ impl Table {
         let name_vec: Vec<String> = value.iter().map(|entry| {entry.0.clone()}).collect();
         for column in &mut self.columns {
             if name_vec.contains(&column.name) {
-                for entry in value.clone() {
+                for entry in &value {
                     if column.name == entry.0 {
-                        let answ = column.new_data(entry.1)?;
+                        let answ = column.new_data(entry.1.clone())?;
                     }
                 }
             } else {
@@ -127,8 +127,7 @@ impl Table {
         return Err(Error::other(format!("Column with name '{}' not found.", columnname)));
     }
     pub fn delete_column(&mut self, columnname: String) -> Result<Success, Error> {
-        let column_index = self.search_for_column(columnname)?;
-        let _ = self.columns.remove(column_index);
+        let _ = self.columns.remove(self.search_for_column(columnname)?);
         return Ok(Success::SuccessMessage(true));
     }
     pub fn select_all_rows(&self) -> Vec<usize> {
