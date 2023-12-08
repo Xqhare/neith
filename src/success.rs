@@ -23,7 +23,7 @@ impl Success {
     /// `Some(Vec<Data>)` if a result exists, `None` otherwise.
     pub fn get_result(&self) -> Option<Vec<Data>> {
         match self {
-            Success::Result(answ) => return Some(answ.clone()),
+            Success::Result(answ) => return Some(answ.to_owned()),
             _ => None,
         }
     }
