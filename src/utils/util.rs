@@ -126,7 +126,7 @@ pub fn decode_single_columndata(single_val: &str) -> Result<(String, Data), Erro
     }
     let split_input = cleaned_input.split_whitespace();
     let name = split_input.clone().take(1).collect::<String>();
-    let data = Data::from(split_input.clone().skip(1).intersperse(" ").collect::<String>());
+    let data = Data::from(split_input.skip(1).intersperse(" ").collect::<String>());
     return Ok((name, data));
 }
 
@@ -153,8 +153,8 @@ pub fn decode_list_conditions(value: String) -> Result<Vec<String>, Error> {
 }
 pub fn encode_list_conditions(value: Vec<String>) -> Result<Vec<(String, Data)>, Error> {
     let mut encoding_list: Vec<(String, Data)> = Vec::new();
-    for thing in value {
-        let mut cleaned_thing = thing.clone();
+    for thing in &value {
+        let mut cleaned_thing = thing.to_owned();
         if thing.contains("[") {
             let temp = thing.replace("[", "");
             cleaned_thing = temp;
