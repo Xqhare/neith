@@ -142,11 +142,11 @@ impl Table {
     }
     /// Returns the index of the data in the column.
     pub fn search_column_data(&self, columnname: String, data: Data) -> Result<Vec<usize>, Error> {
-        let column_index = self.search_for_column(columnname.clone())?;
+        let column_index = self.search_for_column(columnname)?;
         let mut out: Vec<usize> = Vec::new();
         let mut counter: usize = 0;
-        for entry in self.columns[column_index].contents.all_row_data.clone() {
-            if entry == data {
+        for entry in &self.columns[column_index].contents.all_row_data {
+            if entry == &data {
                 out.push(counter);
             }
             counter += 1;
