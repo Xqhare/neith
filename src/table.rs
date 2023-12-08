@@ -78,22 +78,22 @@ impl Table {
         }
         return Ok(Success::SuccessMessage(true));
     }
-    pub fn select_data(self, coulumn_names: Vec<String>, indicies: Vec<usize>) -> Success {
+    pub fn select_data(&self, coulumn_names: Vec<String>, indicies: Vec<usize>) -> Success {
         let mut found_data: Vec<Data> = Vec::new();
         if coulumn_names.contains(&"*".to_string()) {
-            for column in self.columns {
+            for column in &self.columns {
                 let mut colum_data: Vec<Data> = Vec::new();
-                for index in indicies.clone() {
-                    colum_data.push(column.contents.all_row_data[index].clone());
+                for index in &indicies {
+                    colum_data.push(column.contents.all_row_data[*index].clone());
                 }
                 found_data.push(Data::List(colum_data));
             }
         } else {
-            for column in self.columns {
+            for column in &self.columns {
                 if coulumn_names.contains(&column.name) {
                     let mut colum_data: Vec<Data> = Vec::new();
-                    for index in indicies.clone() {
-                        colum_data.push(column.contents.all_row_data[index].clone());
+                    for index in &indicies {
+                        colum_data.push(column.contents.all_row_data[*index].clone());
                     }
                     found_data.push(Data::List(colum_data));
                 }
