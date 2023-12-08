@@ -124,14 +124,14 @@ impl Table {
             }
             counter += 1;
         }
-        return Err(Error::other(format!("Table with name {} not found.", columnname)));
+        return Err(Error::other(format!("Column with name '{}' not found.", columnname)));
     }
     pub fn delete_column(&mut self, columnname: String) -> Result<Success, Error> {
         let column_index = self.search_for_column(columnname)?;
         let _ = self.columns.remove(column_index);
         return Ok(Success::SuccessMessage(true));
     }
-    pub fn select_all_column_data(&self) -> Vec<usize> {
+    pub fn select_all_rows(&self) -> Vec<usize> {
         let mut out: Vec<usize> = Vec::new();
         let mut counter: usize = 0;
         for _row in &self.columns[0].contents.all_row_data {
