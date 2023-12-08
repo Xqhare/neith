@@ -18,20 +18,16 @@ pub fn read_json_from_neithdb_file<P>(filename: P) -> JsonValue where P: AsRef<P
 }
 
 pub fn write_neithdb_file(neith: Neith) -> Result<Success> {
-    println!("START:: {:?}", neith.clone());
     let mut json_tables = JsonValue::new_object();
-    for table in neith.tables {
-        let tablename = table.name;
-        println!("{:?}", tablename);
+    for table in &neith.tables {
+        let tablename = &table.name;
         let mut json_table = JsonValue::new_object();
-        for column in table.columns {
-            let columnname = column.name;
+        for column in &table.columns {
+            let columnname = &column.name;
             let unique = column.unique;
-            println!("{:?}", columnname);
-            println!("{:?}", unique);
             let mut data_array = JsonValue::new_array();
-            for data in column.contents.all_row_data {
-                let _answ = data_array.push(decode_data_to_jsonval(data))?;
+            for data in &column.contents.all_row_data {
+                let _answ = data_array.push(decode_data_to_jsonval(data.clone()))?;
             }
             let mut json_column = JsonValue::new_object();
             let _answ0 = json_column.insert("unique", JsonValue::Boolean(unique))?;
