@@ -10,10 +10,6 @@ pub fn read_json_from_neithdb_file<P>(filename: P) -> JsonValue where P: AsRef<P
     let mut buffer = String::new();
     let _ = input.read_to_string(&mut buffer);
     let out = parse(&buffer).expect("Invalid json file!");
-    println!("{:?}", out);
-    println!("=============================");
-    println!("=============================");
-    println!("=============================");
     return out;
 }
 
