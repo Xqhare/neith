@@ -365,7 +365,7 @@ impl Neith {
                             // itself.
                             let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
                             let duration = start.elapsed().as_micros().to_string();
-                            let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                            let decoded = decode_list_columndata(format!("(id = {id}| command = {binding}| time = {date}| duration = {duration})"))?;
                             let _ = &self.update_history(decoded)?;
                         }
                         return Ok(answ);
@@ -375,7 +375,7 @@ impl Neith {
                         if self.job_history {
                             let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
                             let duration = start.elapsed().as_micros().to_string();
-                            let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                            let decoded = decode_list_columndata(format!("(id = {id}| command = {binding}| time = {date}| duration = {duration})"))?;
                             let _ = &self.update_history(decoded)?;
                         }
                         return Ok(answ);
@@ -388,7 +388,7 @@ impl Neith {
                             // itself.
                             let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
                             let duration = start.elapsed().as_micros().to_string();
-                            let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                            let decoded = decode_list_columndata(format!("(id = {id}| command = {binding}| time = {date}| duration = {duration})"))?;
                             let _ = &self.update_history(decoded)?;
                         }
                         return Ok(answ);
@@ -418,7 +418,7 @@ impl Neith {
                                     // itself.
                                     let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
                                     let duration = start.elapsed().as_micros().to_string();
-                                    let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                                    let decoded = decode_list_columndata(format!("(id = {id}| command = {binding}| time = {date}| duration = {duration})"))?;
                                     let _ = &self.update_history(decoded)?;
                                 }
                                 return Ok(answ);
@@ -446,7 +446,7 @@ impl Neith {
                                     // itself.
                                     let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
                                     let duration = start.elapsed().as_micros().to_string();
-                                    let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                                    let decoded = decode_list_columndata(format!("(id = {id}| command = {binding}| time = {date}| duration = {duration})"))?;
                                     let _ = &self.update_history(decoded)?;
                                 }
                                 return Ok(answ);
@@ -472,7 +472,7 @@ impl Neith {
                                     // itself.
                                     let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
                                     let duration = start.elapsed().as_micros().to_string();
-                                    let decoded = decode_list_columndata(format!("(id = {id}, command = {binding}, time = {date}, duration = {duration})"))?;
+                                    let decoded = decode_list_columndata(format!("(id = {id}| command = {binding}| time = {date}| duration = {duration})"))?;
                                     let _ = &self.update_history(decoded)?;
                                 }
                             return Ok(Success::Result(encoded_data));
