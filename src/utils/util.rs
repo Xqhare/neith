@@ -85,7 +85,7 @@ pub fn decode_columnmaker(input: String) -> Result<Vec<(String, bool)>, Error> {
     return Ok(temp_column_bind);
 }
 // decode this: (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))
-pub fn decode_list_columndata(list_val: String) -> Result<Vec<(String, Data)>, Error> {
+pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Result<Vec<(String, Data)>, Error> {
     let mut out: Vec<(String, Data)> = Vec::new();
     let mut clean_in = list_val.replacen("(", "", 1);
     if clean_in.ends_with("))") {
@@ -93,7 +93,7 @@ pub fn decode_list_columndata(list_val: String) -> Result<Vec<(String, Data)>, E
     } else {
         clean_in = clean_in.trim_end_matches(")").to_string();
     }
-    let split = clean_in.split(",+");
+    let split = clean_in.split(split_patten.to_str());
     let mut list_store: String = String::new();
     let mut list_check = false;
     for entry in split {
@@ -132,9 +132,9 @@ pub fn decode_single_columndata(single_val: &str) -> Result<(String, Data), Erro
 
 // decode this: ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]
 //
-pub fn decode_list_conditions(value: String) -> Result<Vec<String>, Error> {
+pub fn decode_list_conditions(value: String, split_pattern: String) -> Result<Vec<String>, Error> {
     let cleaned_value = value.replace("[", "").replace("]", "");
-    let split = cleaned_value.split(",+");
+    let split = cleaned_value.split(split_pattern.as_str());
     let mut out: Vec<String> = Vec::new();
     for entry in split.clone() {
         if entry.starts_with(" and") || entry.starts_with(" not") || entry.starts_with(" or") {
