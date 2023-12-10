@@ -90,7 +90,7 @@ With this in mind, we know that next we enter the 'tablename', and then choose t
 E.g. 'data' was choosen, it is third in the list, so now '('other_columnname' = 'new_data',+ ...)!)' has to come next. 
 The '!)' marks the end of the command, and the ! is NOT to be typed. It servers as a marker for ease of use during reference.
 Each item of 'name = data' has to be seperated by ',+'. Neith splits the nql syntax in lists by this marker, so your data should not contain this.
-The marker can be changed with the 'con.marker("your_pattern_here")'. If used make sure to always execute and to do it as early as possible in your code.
+The marker can be changed with the 'con.set_marker("your_pattern_here")'. If used make sure to always execute and to do it as early as possible in your code.
 
 ```
 let mut con = Neith::connect("test.neithdb");
