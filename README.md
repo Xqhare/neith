@@ -76,10 +76,10 @@ Nql is a very simple sql and mysql inspired syntax for interacting with neith.
 
 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 
 | - | - | - | - | - | - | - | 
-| execute( | new | table / column / data | 'tablename' | with / with / ('other_columnname' = 'new_data' \| ...)!) | ('columnname' 'unique', ...)!) / ('columnname' 'unique', ...)!) 
-| execute( | delete | table / column / data | with / with / in | 'tablename'!) / 'columnname' / 'tablename' | in / where | 'tablename'!) / ['columnname' = 'data' \| {and/not/or/xor} 'other_columnname' = 'other data' \| ...]!) |
-| execute( | update | 'tablename' | where | ['columnname' = 'data' \| {and/not/or/xor} 'other_columnname' = 'other data' \| ...] | with | ('other_columnname' = 'new_data' \| ...)!) | 
-| execute( | select | (columnname0, columnname1, ...)  OR * | from | 'tablename' | where | ['columnname' = 'data' \| {and/not/or/xor} 'other_columnname' = 'other data' \| ...]!) |
+| execute( | new | table / column / data | 'tablename' | with / with / ('other_columnname' = 'new_data',+ ...)!) | ('columnname' 'unique', ...)!) / ('columnname' 'unique', ...)!) 
+| execute( | delete | table / column / data | with / with / in | 'tablename'!) / 'columnname' / 'tablename' | in / where | 'tablename'!) / ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = 'other data',+ ...]!) |
+| execute( | update | 'tablename' | where | ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = 'other data',+ ...] | with | ('other_columnname' = 'new_data',+ ...)!) | 
+| execute( | select | (columnname0, columnname1, ...)  OR * | from | 'tablename' | where | ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = 'other data',+ ...]!) |
 | execute( | get | min / max / len | in / in / of |  'columnname' / 'columnname' / 'tablename'!) | from / from | 'tablename'!) / 'tablename'!) |
 
 ###### Notes on using the reference table
@@ -87,8 +87,10 @@ The table is read left to right, here the example for any `new` nql syntax:
 
 By reading the table left to right in the first row, we start with 'execute(' followed by 'new'. The next field has 3 possibilites, 'table', 'column' or 'data'. Please note that the order of the elements does not change, so syntax need for 'coulumn' will always be second in the list, as long as any syntax is applicable.
 With this in mind, we know that next we enter the 'tablename', and then choose the right next part in the correct place in the list. 
-E.g. 'data' was choosen, it is third in the list, so now '('other_columnname' = 'new_data', ...)!)' has to come next. The '!)' marks the end of the command, and the ! is NOT to be typed.
-It servers as a marker for ease of use during reference.
+E.g. 'data' was choosen, it is third in the list, so now '('other_columnname' = 'new_data',+ ...)!)' has to come next. 
+The '!)' marks the end of the command, and the ! is NOT to be typed. It servers as a marker for ease of use during reference.
+Each item of 'name = data' has to be seperated by ',+'. Neith splits the nql syntax in lists by this marker, so your data should not contain this.
+The marker can be changed with the 'con.marker("your_pattern_here")'. If used make sure to always execute and to do it as early as possible in your code.
 
 ```
 let mut con = Neith::connect("test.neithdb");
