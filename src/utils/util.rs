@@ -93,7 +93,7 @@ pub fn decode_list_columndata(list_val: String) -> Result<Vec<(String, Data)>, E
     } else {
         clean_in = clean_in.trim_end_matches(")").to_string();
     }
-    let split = clean_in.split("|");
+    let split = clean_in.split(",+");
     let mut list_store: String = String::new();
     let mut list_check = false;
     for entry in split {
@@ -134,7 +134,7 @@ pub fn decode_single_columndata(single_val: &str) -> Result<(String, Data), Erro
 //
 pub fn decode_list_conditions(value: String) -> Result<Vec<String>, Error> {
     let cleaned_value = value.replace("[", "").replace("]", "");
-    let split = cleaned_value.split("|");
+    let split = cleaned_value.split(",+");
     let mut out: Vec<String> = Vec::new();
     for entry in split.clone() {
         if entry.starts_with(" and") || entry.starts_with(" not") || entry.starts_with(" or") {
