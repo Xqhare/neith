@@ -302,7 +302,7 @@ impl Neith {
                     let conditions = command_lvl4.0;
                     let command_lvl5 = strip_leading_word(command_lvl4.1);
                     if command_lvl5.0.as_str().contains("with") {
-                        let decoded_list = decode_list_columndata(command_lvl5.1)?;
+                        let decoded_list = decode_list_columndata(command_lvl5.1, self.split_pattern)?;
                         let table_index = self.search_for_table(tablename)?;
                         let search = self.search_conditionals(conditions, table_index)?;
                         let answ = self.tables[table_index].update_data(decoded_list, search)?;
@@ -461,7 +461,7 @@ impl Neith {
         return self.tables[self.job_history_table_index.unwrap()].new_data(decoded);
     }
     fn search_conditionals(&self, conditions: String, table_index: usize) -> Result<Vec<usize>, Error> {
-        let decoded_conditions = decode_list_conditions(conditions)?;
+        let decoded_conditions = decode_list_conditions(conditions, self.split_pattern)?;
         let mut encoded_conditions = encode_list_conditions(decoded_conditions)?;
         let mut found_data: Vec<usize> = Vec::new();
 
