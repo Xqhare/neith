@@ -175,7 +175,7 @@ impl Neith {
                             let answ = Table::from((tablename, columns));
                             self.tables.push(answ);
                             if self.job_history {
-                                self.write_history(binding, date);
+                                let _ = self.write_history(binding, date, start)?;
                             }
                             // Successful decoding of syntax!
                             return Ok(Success::SuccessMessage(true));
@@ -190,7 +190,7 @@ impl Neith {
                             let table_index = self.search_for_table(tablename)?;
                             let answ = self.tables[table_index].new_columns(columns);
                             if self.job_history {
-                                self.write_history(binding, date);
+                                let _ = self.write_history(binding, date, start)?;
                             }
                             // Successful decoding of syntax!
                             if answ == Success::SuccessMessage(true) {
@@ -204,11 +204,11 @@ impl Neith {
                     },
                     "data" => {
                         let command_lvl4 = command_lvl3.1;
-                        let decoded = decode_list_columndata(command_lvl4, self.split_pattern).unwrap();
+                        let decoded = decode_list_columndata(command_lvl4, self.split_pattern.clone()).unwrap();
                         let table_index = self.search_for_table(tablename)?;
                         let answ = self.tables[table_index].new_data(decoded)?;
                         if self.job_history {
-                            self.write_history(binding, date);
+                            let _ = self.write_history(binding, date, start)?;
                         }
                         if answ == Success::SuccessMessage(true) {
                             return Ok(answ);
@@ -230,7 +230,7 @@ impl Neith {
                             let answ = self.delete_table(tablename);
                             if answ.is_ok() {
                                 if self.job_history {
-                                    self.write_history(binding, date);
+                                    let _ = self.write_history(binding, date, start)?;
                                 }
                                 return Ok(answ.unwrap());
                             } else {
@@ -251,7 +251,7 @@ impl Neith {
                                 let answ = self.delete_column(tablename, columnname);
                                 if answ.is_ok() {
                                     if self.job_history {
-                                        self.write_history(binding, date);
+                                        let _ = self.write_history(binding, date, start)?;
                                     }
                                     return Ok(answ.unwrap());
                                 } else {
@@ -277,7 +277,7 @@ impl Neith {
                                 let answ = self.tables[table_index].delete_data(finished_search);
                                 if answ.is_ok() {
                                     if self.job_history {
-                                        self.write_history(binding, date);
+                                        let _ = self.write_history(binding, date, start)?;
                                     }
                                     return Ok(answ.unwrap());
                                 } else {
@@ -302,12 +302,12 @@ impl Neith {
                     let conditions = command_lvl4.0;
                     let command_lvl5 = strip_leading_word(command_lvl4.1);
                     if command_lvl5.0.as_str().contains("with") {
-                        let decoded_list = decode_list_columndata(command_lvl5.1, self.split_pattern)?;
+                        let decoded_list = decode_list_columndata(command_lvl5.1, self.split_pattern.clone())?;
                         let table_index = self.search_for_table(tablename)?;
                         let search = self.search_conditionals(conditions, table_index)?;
                         let answ = self.tables[table_index].update_data(decoded_list, search)?;
                         if self.job_history {
-                            self.write_history(binding, date);
+                            let _ = self.write_history(binding, date, start)?;
                         }
                         match answ {
                             Success::SuccessMessage(true) => return Ok(answ),
@@ -333,14 +333,14 @@ impl Neith {
                         let search = self.select_all_rows(table_index);
                         let answ = self.tables[table_index].clone().select_data(decoded_column_list, search);
                         if self.job_history {
-                            self.write_history(binding, date);
+                            let _ = self.write_history(binding, date, start)?;
                         }
                         return Ok(answ);
                     } else if !binding.contains("where") {
                         let search = self.select_all_rows(table_index);
                         let answ = self.tables[table_index].select_data(decoded_column_list, search);
                         if self.job_history {
-                            self.write_history(binding, date);
+                            let _ = self.write_history(binding, date, start)?;
                         }
                         return Ok(answ);
                     } else if command_lvl5.0.as_str().contains("where") {
@@ -348,7 +348,7 @@ impl Neith {
                         let search = self.search_conditionals(conditions.clone(), table_index)?;
                         let answ = self.tables[table_index].clone().select_data(decoded_column_list, search);
                         if self.job_history {
-                            self.write_history(binding, date);
+                            let _ = self.write_history(binding, date, start)?;
                         }
                         return Ok(answ);
                     } else {
@@ -373,7 +373,7 @@ impl Neith {
                                 let column_index = self.tables[table_index].search_for_column(columnname)?;
                                 let answ = self.tables[table_index].columns[column_index].min();
                                 if self.job_history {
-                                    self.write_history(binding, date);
+                                    let _ = self.write_history(binding, date, start)?;
                                 }
                                 return Ok(answ);
                             } else {
@@ -396,7 +396,7 @@ impl Neith {
                                 let column_index = self.tables[table_index].search_for_column(columnname)?;
                                 let answ = self.tables[table_index].columns[column_index].max();
                                 if self.job_history {
-                                    self.write_history(binding, date);
+                                    let _ = self.write_history(binding, date, start)?;
                                 }
                                 return Ok(answ);
                             } else {
@@ -417,7 +417,7 @@ impl Neith {
                             let temp_str = answ.to_string();
                             let encoded_data = vec![Data::from(temp_str)];
                             if self.job_history {
-                                self.write_history(binding, date);
+                                let _ = self.write_history(binding, date, start)?;
                             }
                             return Ok(Success::Result(encoded_data));
                         } else {
@@ -435,14 +435,15 @@ impl Neith {
             },
         }
     }
-    fn write_history(&mut self, binding: String, date: String) {
+    fn write_history(&mut self, binding: String, date: String, start: Instant) -> Result<(), Error> {
         // I use length => no need to add +1, len does that by
         // itself.
         let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
         let duration = start.elapsed().as_micros().to_string();
-        let sp = self.split_pattern;
-        let decoded = decode_list_columndata(format!("(id = {id}{sp} command = {binding}{sp} time = {date}{sp} duration = {duration})"), self.split_pattern)?;
+        let sp = &self.split_pattern;
+        let decoded = decode_list_columndata(format!("(id = {id}{sp} command = {binding}{sp} time = {date}{sp} duration = {duration})"), self.split_pattern.clone())?;
         let _ = &self.update_history(decoded)?;
+        return Ok(());
     }
     /// Check if a table exists. returns `true` if it is found, `false` otherwise.
     pub fn check_exsistance(&self, name: String) -> bool {
@@ -461,7 +462,7 @@ impl Neith {
         return self.tables[self.job_history_table_index.unwrap()].new_data(decoded);
     }
     fn search_conditionals(&self, conditions: String, table_index: usize) -> Result<Vec<usize>, Error> {
-        let decoded_conditions = decode_list_conditions(conditions, self.split_pattern)?;
+        let decoded_conditions = decode_list_conditions(conditions, self.split_pattern.clone())?;
         let mut encoded_conditions = encode_list_conditions(decoded_conditions)?;
         let mut found_data: Vec<usize> = Vec::new();
 

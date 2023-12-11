@@ -93,7 +93,7 @@ pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Result
     } else {
         clean_in = clean_in.trim_end_matches(")").to_string();
     }
-    let split = clean_in.split(split_patten.to_str());
+    let split = clean_in.split(split_pattern.as_str());
     let mut list_store: String = String::new();
     let mut list_check = false;
     for entry in split {

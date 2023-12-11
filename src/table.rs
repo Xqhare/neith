@@ -107,7 +107,7 @@ impl Table {
             if name_vec.contains(&column.name) {
                 for entry in &value {
                     if column.name == entry.0 {
-                        let answ = column.new_data(entry.1.clone())?;
+                        let _answ = column.new_data(entry.1.clone())?;
                     }
                 }
             } else {
