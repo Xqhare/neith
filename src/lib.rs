@@ -171,6 +171,11 @@ impl Neith {
                     "table" => {
                         let command_lvl4 = strip_leading_word(command_lvl3.1);
                         if command_lvl4.0.as_str().contains("with") {
+                            if self.search_for_table(tablename.clone()).is_ok() {
+                                // Table exists already; Don't do anything act like everything is
+                                // fine!
+                                return Ok(Success::SuccessMessage(true));
+                            }
                             let columns = decode_columnmaker(command_lvl4.1).unwrap();
                             let answ = Table::from((tablename, columns));
                             self.tables.push(answ);
