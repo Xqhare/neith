@@ -1,15 +1,25 @@
+//! This contains general supporting logic, mainly for lib.rs
 
 use std::{path::PathBuf, io::Error};
 
 use crate::{data::Data, table::Table};
 
-// write a decoder for every code step 
+/// Strips the leading word of a given string and returns a touple containing both.
+///
+/// ## Returns
+/// A touple [`(String, String)`] where first is the stripped leading word, followed by the rest of
+/// the string in second place.
 pub fn strip_leading_word(to_strip: String) -> (String, String) {
     let split_query = to_strip.splitn(2, " ");
     let command = split_query.clone().take(1).collect::<String>();
     let remainder = split_query.clone().skip(1).collect::<String>();
     return (command, remainder);
 }
+/// Strips the leading condition list of a given string and returns a touple containing both.
+///
+/// ## Returns
+/// A touple [`(String, String)`] where first is the stripped leading condition list, followed by the rest of
+/// the string in second place.
 pub fn strip_condition_list(to_strip: String) -> (String, String) {
     let split_query = to_strip.splitn(2, "]");
     let mut condition_list = split_query.clone().take(1).collect::<String>();
@@ -17,6 +27,14 @@ pub fn strip_condition_list(to_strip: String) -> (String, String) {
     let remainder = split_query.skip(1).collect::<String>().trim_start().to_string();
     return (condition_list, remainder);
 }
+/// Strips the leading column list of a given string and returns a touple containing both.
+///
+/// ## Returns
+/// A touple [`(String, String)`] where first is the stripped leading column list, followed by the rest of
+/// the string in second place.
+///
+/// ## Errors
+/// Errors if it encounters a invalid colum name or invalid nql syntax.
 pub fn strip_column_list(to_strip: String) -> Result<(String, String), Error> {
     if to_strip.starts_with("*") {
         let answ = strip_leading_word(to_strip);
@@ -33,18 +51,30 @@ pub fn strip_column_list(to_strip: String) -> Result<(String, String), Error> {
 }
 // Add my own file extension, because I can! By first removing any the user might have set,
 // and then adding on my own.
+/// This replaces the path extension of the database file with `.neithdb`.
+///
+/// ## Returns
+/// A valid `PathBuf` with the `.neithdb` extension.
 pub fn canonize_path(value: PathBuf) -> PathBuf {
         let mut path = value;
         path.set_extension("");
         path.set_extension("neithdb");
         return path;
 }
+/// Checks for the existance of a `.neithdb` file at the supplied path.
+///
+/// ## Returns
+/// `true` if it exists, `false` if not.
 pub fn check_for_persistant_db(filename: PathBuf) -> bool {
     match filename.try_exists() {
         Ok(result) => return result,
         _ => return false,
     }
 }
+/// Decodes a column list passed in as a string. For decoding it also needs the table.
+///
+/// ## Returns
+/// A vector containing each column as a string.
 pub fn decode_column_list(input: String, table: Table) -> Vec<String> {
     if input.contains("*") {
         let mut found_column: Vec<String> = Vec::new();
@@ -63,6 +93,14 @@ pub fn decode_column_list(input: String, table: Table) -> Vec<String> {
     }
     
 }
+/// Decodes the colum-maker list from a string.
+///
+/// ## Returns
+/// A vector containing the touple [`(String, bool)`], the string is the colum name, the boolean if
+/// it is unique or not.
+///
+/// ## Errors
+/// Can error from invalid nql syntax.
 pub fn decode_columnmaker(input: String) -> Result<Vec<(String, bool)>, Error> {
     // ('columnname' 'unique, ...') is left.
     let no_parenthesis = input.replace("(", "").replace(")", "");
@@ -84,8 +122,14 @@ pub fn decode_columnmaker(input: String) -> Result<Vec<(String, bool)>, Error> {
     }
     return Ok(temp_column_bind);
 }
-// decode this: (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))
-pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Result<Vec<(String, Data)>, Error> {
+// decode this: 
+/// Decodes a list passed in as a string, and a split pattern that seperates the different entries.
+/// The list has the form of: (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))
+/// 
+/// ## Returns
+/// A vector containing touples of [`(String, Data)`]. The string is the column name, the Data the
+/// encoded value read from the input list.
+pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Vec<(String, Data)> {
     let mut out: Vec<(String, Data)> = Vec::new();
     let mut clean_in = list_val.replacen("(", "", 1);
     if clean_in.ends_with("))") {
@@ -104,20 +148,20 @@ pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Result
             list_store.push_str(entry);
             if entry.contains(")") {
                 list_check = false;
-                let new = decode_single_columndata(&list_store)?;
+                let new = decode_single_columndata(&list_store);
                 out.push(new);
             }
             list_store.push_str(",");
         } else {
-            let new = decode_single_columndata(entry)?;
+            let new = decode_single_columndata(entry);
             out.push(new);
         }
     }
-    return Ok(out);
+    return out;
 }
 // decode this: (other_columnname = newdata) -> as smaller more focused function for more broad
 // usage during decoding.
-pub fn decode_single_columndata(single_val: &str) -> Result<(String, Data), Error> {
+pub fn decode_single_columndata(single_val: &str) -> (String, Data) {
     // I get: columnname = data
     let mut cleaned_input = single_val.replace("=", "");
     if cleaned_input.contains("]") {
@@ -127,7 +171,7 @@ pub fn decode_single_columndata(single_val: &str) -> Result<(String, Data), Erro
     let split_input = cleaned_input.split_whitespace();
     let name = split_input.clone().take(1).collect::<String>();
     let data = Data::from(split_input.skip(1).intersperse(" ").collect::<String>());
-    return Ok((name, data));
+    return (name, data);
 }
 
 // decode this: ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]
@@ -163,7 +207,7 @@ pub fn encode_list_conditions(value: Vec<String>) -> Result<Vec<(String, Data)>,
             cleaned_thing = temp;
         }
         if cleaned_thing.contains(" = ") {
-            let decode_columndata = decode_single_columndata(&cleaned_thing)?;
+            let decode_columndata = decode_single_columndata(&cleaned_thing);
             let name = decode_columndata.0;
             let data = decode_columndata.1;
             encoding_list.push((name, data));
