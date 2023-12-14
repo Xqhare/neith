@@ -5,6 +5,10 @@ use std::{io::Read, fs::{File, self}, path::Path};
 
 use crate::{Neith, data::Data, success::Success};
 
+/// Takes a path and reads the json file at the location the path points to.
+///
+/// ## Returns
+/// Returns a `JsonValue`.
 pub fn read_json_from_neithdb_file<P>(filename: P) -> JsonValue where P: AsRef<Path> {
     let mut input = File::open(filename).expect("Unable to open file!");
     let mut buffer = String::new();
@@ -12,7 +16,13 @@ pub fn read_json_from_neithdb_file<P>(filename: P) -> JsonValue where P: AsRef<P
     let out = parse(&buffer).expect("Invalid json file!");
     return out;
 }
-
+/// Takes the database and writes it to file.
+///
+/// ## Returns
+/// A generic Success message.
+///
+/// ## Errors
+/// Can `JsonError` during json encoding or saving to disc.
 pub fn write_neithdb_file(neith: Neith) -> Result<Success> {
     let mut json_tables = JsonValue::new_object();
     for table in &neith.tables {
@@ -33,8 +43,12 @@ pub fn write_neithdb_file(neith: Neith) -> Result<Success> {
         let _answ2 = json_tables.insert(&tablename, json_table)?;
     }
     let file = fs::File::create(neith.path);
-    let _fin = json_tables.write(&mut file.unwrap()).unwrap();
-    return Ok(Success::SuccessMessage(true));
+    let fin = json_tables.write(&mut file.unwrap());
+    if fin.is_ok() {
+        return Ok(Success::SuccessMessage(true));
+    } else {
+        return Err(JsonError::wrong_type("Error during writing!"));
+    }
 }
 fn decode_data_to_jsonval(neith_data: crate::Data) -> JsonValue {
     // Nested functions, now in a database near you!
