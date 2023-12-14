@@ -1,8 +1,13 @@
 use crate::data::Data;
 
 #[derive(Clone, PartialEq, Debug)]
+/// Neith will either return a error, or this `Success` enum.
+/// `Success` can contain the general `SucessMessage` wrapping a boolean or the requested Result,
+/// wrapping a vector of `Data`.
 pub enum Success {
+    /// The wrapped boolean can be disregarded, it is never set to `false` but helps with debugging.
     SuccessMessage(bool),
+    /// The wrapped vector contains the requested data, these are often nested vectors!
     Result(Vec<Data>),
 }
 
