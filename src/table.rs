@@ -116,6 +116,13 @@ impl Table {
         }
         return Ok(Success::SuccessMessage(true));
     }
+    /// Searches for the column with the given column name.
+    ///
+    /// ## Returns
+    /// The index of the column.
+    ///
+    /// ## Errors
+    /// If the supplied column doesn't exist.
     pub fn search_for_column(&self, columnname: String) -> Result<usize, Error> {
         let mut counter: usize = 0;
         for entry in &self.columns {
@@ -126,10 +133,19 @@ impl Table {
         }
         return Err(Error::other(format!("Column with name '{}' not found.", columnname)));
     }
+    /// Deletes the column with the given column name.
+    ///
+    /// ## Returns
+    /// A generic `SuccessMessage`.
+    ///
+    /// ## Errors
+    /// If the supplied column doesn't exist.
     pub fn delete_column(&mut self, columnname: String) -> Result<Success, Error> {
         let _ = self.columns.remove(self.search_for_column(columnname)?);
         return Ok(Success::SuccessMessage(true));
     }
+    /// ## Returns
+    /// A vector containing the indices of all rows.
     pub fn select_all_rows(&self) -> Vec<usize> {
         let mut out: Vec<usize> = Vec::new();
         let mut counter: usize = 0;
