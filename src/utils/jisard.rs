@@ -1,4 +1,5 @@
-// This is the Json-Wizard or Jisard for short.
+//! This is the Json-Wizard or Jisard for short.
+//! It contains the logic for reading and writing a json file.
 
 use json::*;
 use std::{io::Read, fs::{File, self}, path::Path};
@@ -50,8 +51,17 @@ pub fn write_neithdb_file(neith: Neith) -> Result<Success> {
         return Err(JsonError::wrong_type("Error during writing!"));
     }
 }
+/// Takes in a `neith::Data` and encodes it as a `JsonValue`.
+/// This supports up to 5 nested lists!
+///
+/// ## Returns
+/// A `JsonValue` containing the passed in `Data`.
 fn decode_data_to_jsonval(neith_data: crate::Data) -> JsonValue {
     // Nested functions, now in a database near you!
+    /// Converts the data to a `JsonValue`. Should a list be passed in, its set to `Null.`
+    ///
+    /// ## Returns
+    /// A `JsonValue`.
     fn make_json_val(data: Data) -> JsonValue {
         match data.get_type().as_str() {
             "String" => {
