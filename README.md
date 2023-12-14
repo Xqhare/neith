@@ -3,37 +3,37 @@ Neith is a small, lightweight and BLAZINGLY FAST database.
 
 The name Neith is derived from Neith, the ancient Egyptian goddess of war, creation, and weaving. She represents the intricate connections and patterns that form the cosmos and foundation of knowledge.
 
-Neith is not made for large projects, or projects that need to do a lot of data intensive work. Neith is made for small projects, with the need for some database storage and simple logic. For large datasets more ram is needed as Neith holds the entire database in memory from startup, leading to fast reads and writes (except the save to disc of course). Users are strongly discuraged from using complex api requests, this is mainly because it does not support multicore - maybe at some point, no promises - so performance can be impacted by such requests.
+Neith is not made for large projects, or projects that need to do a lot of data intensive work. Neith is made for small projects, with the need for some database storage and simple logic. For large data-sets more ram is needed as Neith holds the entire database in memory from startup, leading to fast reads and writes (except the save to disc of course). Users are strongly discouraged from using complex API requests, this is mainly because it does not support multi-core - maybe at some point, no promises - so performance can be impacted by such requests.
 
-My limited testing and experience has shown that Neith does quite well as long as the complexety and amount of data is managed, a simple table can hold 50k rows and while a slowdown is noticable, it is still acceptable. For more complex tables the row-count is a fair bit lower at around 30k.
-Splitting the data up into more tables inside neith can help with performance too! A good rule of thumb is that the shorter the table the better the performance.
+My limited testing and experience has shown that Neith does quite well as long as the complexity and amount of data is managed, a simple table can hold 50k rows and while a slowdown is noticeable, it is still acceptable. For more complex tables the row-count is a fair bit lower at around 30k.
+Splitting the data up into more tables inside Neith can help with performance too! A good rule of thumb is that the shorter the table the better the performance.
 Please note that the more columns a table has, performance is impacted too. However, a table with a several thousand columns is out of the scope of this project anyway, so just keep it in mind - Neith is like any other database, more data complexity means more compute time.
 
 Having said all this, Neith gives the perfect excuse for a bad performing program, as everyone knows that it's always the database's fault!
 
 ## Design and philosophy of Neith
 
-Neith is designed to do what the user or program is telling it, whatever that is. Neith will execute anything passed to it, as long as it can decode it. There is no handholding, Neith will never assume or interpret what the user wants to do, it just does.
+Neith is designed to do what the user or program is telling it, whatever that is. Neith will execute anything passed to it, as long as it can decode it. There is no hand-holding, Neith will never assume or interpret what the user wants to do, it just does.
 
-I tried to make it as unopinionated as possible so that it will try to do whatever it is told to do; So beware of what you do!
-For example, you can put whatever you want into any column, be it a number, string, boolean or list. Also the `unique` key entered during column creation is mostly for ease of use, Neith would happily put the same thing twice into a column marked as `unique`. This is by design, Neith will do what you tell it, and only inform you if it encountered an Error or succeded.
+I tried to make it as un-opinionated as possible so that it will try to do whatever it is told to do; So beware of what you do!
+For example, you can put whatever you want into any column, be it a number, string, boolean or list. Also the `unique` key entered during column creation is mostly for ease of use, Neith would happily put the same thing twice into a column marked as `unique`. This is by design, Neith will do what you tell it, and only inform you if it encountered an Error or succeeded.
 These design principles are the reason why Neith will not save to disc by itself for example. Neith will not assume what it should do, it will wait for you to tell it what to do.
 
 ## Naming
 
-Neith, the ancient Egyptian goddess, was a multifaceted diety revered for her roles in creation, widom, weaving, and war. She was one of the most enduring and influential goddesses throughout Egypt's long and storied history and was worshipped from the Predynastic era (c. 6000-3150 BCE) through to the arrival of roman rule (30 BCE), some 4000 years.
-Her primary association was with the city of Sais in the Nile river delta, where she was worshipped as the patron goddess. Often depicted as a woman wearing the red crown of lower egypt and holding crossed arrows and bow, she symbolized power as well as war.
-Neith's role as a creator goddess extended far beyond weaving, as she was believed to have woven the cosmos into existence on her loom. She was also associated with the primordial waters, further emphasizing her creative power, as these waters were seen as the source of all life.
+Neith, the ancient Egyptian goddess, was a multifaceted deity revered for her roles in creation, wisdom, weaving, and war. She was one of the most enduring and influential goddesses throughout Egypt's long and storied history and was worshipped from the Pre-dynastic era (c. 6000-3150 BCE) through to the arrival of roman rule (30 BCE), some 4000 years.
+Her primary association was with the city of Sais in the Nile river delta, where she was worshipped as the patron goddess. Often depicted as a woman wearing the red crown of lower Egypt and holding crossed arrows and bow, she symbolised power as well as war.
+Neith's role as a creator goddess extended far beyond weaving, as she was believed to have woven the cosmos into existence on her loom. She was also associated with the primordial waters, further emphasising her creative power, as these waters were seen as the source of all life.
 Her wisdom was also widely celebrated, and often consulted for guidance and counsel.
 
-In additon Neith was also a fierce protector and warrior goddess. Her depictions often showed her with hunting implements, and her protective role extended into the afterlife where she was believed to guide and protect the deceased on their journey.
+In addition Neith was also a fierce protector and warrior goddess. Her depictions often showed her with hunting implements, and her protective role extended into the afterlife where she was believed to guide and protect the deceased on their journey.
 
-Her name resonates with the purpose of this database, which aims to weave together desperate peices of information into a cohesive and meaningful tapestry of data. Just as Neith skillfully weaves threads into exquisite fabrics, this database seeks to seamlessly integrate and organize data to unveil hidden insights. Neith's association with order reflecting the databese's ability to efficiently manage and organize data.
+Her name resonates with the purpose of this database, which aims to weave together desperate pieces of information into a cohesive and meaningful tapestry of data. Just as Neith skilfully weaves threads into exquisite fabrics, this database seeks to seamlessly integrate and organise data to unveil hidden insights. Neith's association with order reflecting the database's ability to efficiently manage and organise data.
 
-The name Neith embodies the essence of this database, symbolizing it's ability to weave together, transform and illuminate the data, much like the goddess herself.
+The name Neith embodies the essence of this database, symbolising it's ability to weave together, transform and illuminate the data, much like the goddess herself.
 
 ### Recursive Acronym
-The name is also a recursive arconym:
+The name is also a recursive acronym:
 
 Neith
 Enhances
@@ -41,9 +41,9 @@ Information
 Through
 Hierarchy
 
-## Datatypes
-It supports only basic datatypes, floating point numbers, booleans, strings, as well as Lists.
-Signed and unsigned intergers are excluded for the sake of simplicity, ease of use and a smaller footprint.
+## Data-types
+It supports only basic data-types, floating point numbers, booleans, strings, as well as Lists.
+Signed and unsigned integers are excluded for the sake of simplicity, ease of use and a smaller footprint.
 If you really need to use them, Neith is probably not for you.
 
 ### Types:
@@ -63,33 +63,33 @@ The first is only used once to create a connection to the database, any interact
 The `execute()` function uses Neithql or nql, a very simple and basic implementation of some sql syntax.
 With the last function you can save the current state of the database to disc. If you are not running in ram-mode that is.
 
-Note that Neith always returns something for each call. In most operations this is a simple success message containg a `true` boolean.
+Note that Neith always returns something for each call. In most operations this is a simple success message containing a `true` boolean.
 The boolean wrapped by the `SuccessMessage` type does not matter; 
 It can also contain the data queried, or an Error encountered during execution.
 For this reason, it is recommended that you bind every query to a variable, marking it with `_` if you want to ignore the returned value.
 
 ### Nql or Neith query language
 
-Nql is a very simple sql and mysql inspired syntax for interacting with neith.
+Nql is a very simple sql and mysql inspired syntax for interacting with Neith.
 
 #### Nql reference table
 
 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 
 | - | - | - | - | - | - | - | 
-| execute( | new | table / column / data | 'tablename' | with / with / ('other_columnname' = 'new_data',+ ...)!) | ('columnname' 'unique', ...)!) / ('columnname' 'unique', ...)!) 
+| execute( | new | table / column / data | 'tablename' | with / with / ('other_columnname' = 'new_data',+ 'different_column' = '(list, of, data, in, parenthesis)',+ ...)!) | ('columnname' 'unique', ...)!) / ('columnname' 'unique', ...)!) 
 | execute( | delete | table / column / data | with / with / in | 'tablename'!) / 'columnname' / 'tablename' | in / where | 'tablename'!) / ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = 'other data',+ ...]!) |
-| execute( | update | 'tablename' | where | ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = 'other data',+ ...] | with | ('other_columnname' = 'new_data',+ ...)!) | 
+| execute( | update | 'tablename' | where | ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = '(other, data, as, list)',+ ...] | with | ('other_columnname' = 'new_data',+ 'different_column' = '(list, of, data, in, parenthesis)',+ ...)!) | 
 | execute( | select | (columnname0, columnname1, ...)  OR * | from | 'tablename' | where | ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = 'other data',+ ...]!) |
 | execute( | get | min / max / len | in / in / of |  'columnname' / 'columnname' / 'tablename'!) | from / from | 'tablename'!) / 'tablename'!) |
 
 ###### Notes on using the reference table
 The table is read left to right, here the example for any `new` nql syntax:
 
-By reading the table left to right in the first row, we start with 'execute(' followed by 'new'. The next field has 3 possibilites, 'table', 'column' or 'data'. Please note that the order of the elements does not change, so syntax need for 'coulumn' will always be second in the list, as long as any syntax is applicable.
+By reading the table left to right in the first row, we start with 'execute(' followed by 'new'. The next field has 3 possibilities, 'table', 'column' or 'data'. Please note that the order of the elements does not change, so syntax need for 'column' will always be second in the list, as long as any syntax is applicable.
 With this in mind, we know that next we enter the 'tablename', and then choose the right next part in the correct place in the list. 
-E.g. 'data' was choosen, it is third in the list, so now '('other_columnname' = 'new_data',+ ...)!)' has to come next. 
+E.g. 'data' was chosen, it is third in the list, so now '('other_columnname' = 'new_data',+ ...)!)' has to come next. 
 The '!)' marks the end of the command, and the ! is NOT to be typed. It servers as a marker for ease of use during reference.
-Each item of 'name = data' has to be seperated by ',+'. Neith splits the nql syntax in lists by this marker, so your data should not contain this.
+Each item of 'name = data' has to be separated by ',+'. Neith splits the nql syntax in lists by this marker, so your data should not contain this.
 The marker can be changed with the 'con.set_marker("your_pattern_here")'. If used make sure to always execute and to do it as early as possible in your code.
 
 ```
@@ -117,6 +117,11 @@ let new_table = con.execute("new table testtable with (column1 true, column2 fal
 This creates a table with the name `testtable` and the columns `column1`, `column2` and `column3`. 
 
 Each column needs a `unique_bool` boolean demarcating if the column contents will be unique (eg. the ID).
+
+Neith does check if the table exists, and returns a success, it will however NOT write a table with the same name again.
+Neith will treat two executions of the `"new table 'same_tablename'"` as one, however if the second execution would add more columns, they are ignored.
+This is done because Neith works with the first table of any given name it has, but will save only the last table of that name.
+That would be confusing behaviour so only one table per name is allowed.
 
 ###### Notes on tables
 Tables cannot be renamed, nor the name or unique boolean of their columns changed.
@@ -170,9 +175,9 @@ let select2 = con.execute("select (column1, column2, column3, column4) from test
 ```
 
 Selects entry in specified column. * is valid for all columns.
-Select returns data ALWAYS in the oder it was found in the table, e.g. if you search for 'column7, column1, column3' the results will be in the order 'column1, column3, column7'.
+Select returns data ALWAYS in the order it was found in the table, e.g. if you search for 'column7, column1, column3' the results will be in the order 'column1, column3, column7'.
 
-#### Convinience functions:
+#### Convenience functions:
 
 ```
 let con = Neith::connect("test.neithdb");
@@ -182,16 +187,14 @@ let get_len = con.execute("get len of testtable");
 ```
 #### Saving data to disc
 
-If Neith is set up using the `connect()` function, it will read any data found at the specified path, and do any operations on the data in ram. Ending the programm without `.close()`-ing the connection, will not save the data from ram to disc, and will behave like a Neith instance in `ram-mode`, just without some benefits of the flag and some more overhead.
-After a connection has been closed, it has to be reopened using the `connect()` function - this is ressource intensive, so only save during runtime if absolutely neccesarry.
+If Neith is set up using the `connect()` function, it will read any data found at the specified path, and do any operations on the data in ram. Ending the program without `.close()`-ing the connection, will not save the data from ram to disc, and will behave like a Neith instance in `ram-mode`, just without some benefits of the flag and some more overhead.
+After a connection has been closed, it has to be reopened using the `connect()` function - this is resource intensive, so only save during run-time if absolutely necessary.
 
 ```
 let con = Neith::connect("test.neithdb");
 con.close();
 ```
-This opens and immmediatly closes (or saves the state of) neith.
-
-WIP BELOW
+This opens and immediatly closes (or saves the state of) Neith.
 
 ### `job_history`-Table
 
@@ -222,6 +225,5 @@ To query the `job-history`, just use the `execute()` function as you would with 
 
 Just treat it as read-only.
 Even though it is not. Trust me.
-The table is writeable, so you could do what you want with it. I would recommend against it though.
-If something breakes it is your fault, I warned you.
-As saving of this data can create unwanted ram and cpu overhead(Not much, however with the small scale of Neith, it could matter to you.), the fearure is, by default, turned off.
+The table is write-able, so you could do what you want with it. I would recommend against it though. So if something breaks it is your fault, I warned you.
+As saving of this data can create unwanted ram and cpu overhead(Not much, however with the small scale of Neith, it could matter to you.), the feature is, by default, turned off.
