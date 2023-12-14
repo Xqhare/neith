@@ -209,7 +209,7 @@ impl Neith {
                     },
                     "data" => {
                         let command_lvl4 = command_lvl3.1;
-                        let decoded = decode_list_columndata(command_lvl4, self.split_pattern.clone()).unwrap();
+                        let decoded = decode_list_columndata(command_lvl4, self.split_pattern.clone());
                         let table_index = self.search_for_table(tablename)?;
                         let answ = self.tables[table_index].new_data(decoded)?;
                         if self.job_history {
@@ -307,7 +307,7 @@ impl Neith {
                     let conditions = command_lvl4.0;
                     let command_lvl5 = strip_leading_word(command_lvl4.1);
                     if command_lvl5.0.as_str().contains("with") {
-                        let decoded_list = decode_list_columndata(command_lvl5.1, self.split_pattern.clone())?;
+                        let decoded_list = decode_list_columndata(command_lvl5.1, self.split_pattern.clone());
                         let table_index = self.search_for_table(tablename)?;
                         let search = self.search_conditionals(conditions, table_index)?;
                         let answ = self.tables[table_index].update_data(decoded_list, search)?;
@@ -446,7 +446,7 @@ impl Neith {
         let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
         let duration = start.elapsed().as_micros().to_string();
         let sp = &self.split_pattern;
-        let decoded = decode_list_columndata(format!("(id = {id}{sp} command = {binding}{sp} time = {date}{sp} duration = {duration})"), self.split_pattern.clone())?;
+        let decoded = decode_list_columndata(format!("(id = {id}{sp} command = {binding}{sp} time = {date}{sp} duration = {duration})"), self.split_pattern.clone());
         let _ = &self.update_history(decoded)?;
         return Ok(());
     }
