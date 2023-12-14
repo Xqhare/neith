@@ -100,6 +100,16 @@ impl Data {
             _ => None,
         }
     }
+    /// Returns the type of data.
+    ///
+    /// - List
+    /// - Float
+    /// - Bool
+    /// - String
+    /// - Null
+    ///
+    /// ## Returns
+    /// A entry from the list above as a `String`.
     pub fn get_type(&self) -> String {
         match self {
             Self::List(_anything) => {
@@ -119,6 +129,7 @@ impl Data {
             },
         }
     }
+    /// Constructs a boolean, float or string out of a supplied value.
     fn from_single_for_list(value: String) -> Self {
         let bool_test = value.parse::<bool>();
         if bool_test.is_ok() {
@@ -131,6 +142,7 @@ impl Data {
             return Data::String(value);
         }
     }
+    /// Makes a singular data type out of a json value.
     pub fn from_json_value(value: &JsonValue) -> Result<Self, std::io::Error> {
         if value.is_boolean() {
             let out = value.as_bool();
@@ -166,6 +178,7 @@ impl Data {
         let out: Vec<Data> = Vec::new();
         return Self::List(out);
     }
+    /// Makes a new list out of a json value.
     pub fn make_list(json_array: &JsonValue) -> Self {
         let mut out: Vec<Data> = Vec::new();
         for entry in json_array.members() {
