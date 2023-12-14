@@ -161,6 +161,10 @@ pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Vec<(S
 }
 // decode this: (other_columnname = newdata) -> as smaller more focused function for more broad
 // usage during decoding.
+/// Decodes a singular pair of `colum_name = data` passed in as a `&str`.
+///
+/// ## Returns
+/// A touple of `(String, Data)` where `String` is the column name and `Data` is the data.
 pub fn decode_single_columndata(single_val: &str) -> (String, Data) {
     // I get: columnname = data
     let mut cleaned_input = single_val.replace("=", "");
@@ -174,8 +178,14 @@ pub fn decode_single_columndata(single_val: &str) -> (String, Data) {
     return (name, data);
 }
 
-// decode this: ['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]
-//
+/// Decodes list conditions of this general shema: `['columnname' = 'data', {and/not/or} 'other_columnname' = 'other data', ...]` with each entry separated by a supplied split pattern, to a temporary format for further decoding.
+/// 
+///
+/// ## Returns
+/// A vector containing a String for each condition.
+///
+/// ## Errors
+/// If supplied with invalid nql.
 pub fn decode_list_conditions(value: String, split_pattern: String) -> Result<Vec<String>, Error> {
     let cleaned_value = value.replace("[", "").replace("]", "");
     let split = cleaned_value.split(split_pattern.as_str());
@@ -195,6 +205,16 @@ pub fn decode_list_conditions(value: String, split_pattern: String) -> Result<Ve
     }
     return Ok(out);
 }
+/// Encodes list conditions as decoded by `decode_list_conditions`.
+/// 
+///
+/// ## Returns
+/// A vector containing a touple [`(String, Data)`], where `String` is the column name OR
+/// condition. `Data` holds the data for the column if the `String` is the column name, or holds
+/// `Data::default()` if the `String` contains the condition.
+///
+/// ## Errors
+/// If supplied with invalid nql.
 pub fn encode_list_conditions(value: Vec<String>) -> Result<Vec<(String, Data)>, Error> {
     let mut encoding_list: Vec<(String, Data)> = Vec::new();
     for thing in &value {
@@ -223,6 +243,20 @@ pub fn encode_list_conditions(value: Vec<String>) -> Result<Vec<(String, Data)>,
     }
     return Ok(encoding_list);
 }
+/// Takes in two vectors of `usize` and a condition.
+/// Then checks both vectors against each other using the supplied condition.
+/// 
+/// Supported conditions:
+/// - and
+/// - not
+/// - or
+/// - xor
+///
+/// ## Returns
+/// A vector containing the integers that followed the condition.
+///
+/// ## Errors
+/// If supplied with an unsupported condition returns a `Invalid nql` Error.
 pub fn condition_check(search: Vec<usize>, condition: String, other_search: Vec<usize>) -> Result<Vec<usize>, Error> {
     let mut found_data: Vec<usize> = Vec::new();
     match condition.as_str() {
