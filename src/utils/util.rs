@@ -124,7 +124,7 @@ pub fn decode_columnmaker(input: String) -> Result<Vec<(String, bool)>, Error> {
 }
 // decode this: 
 /// Decodes a list passed in as a string, and a split pattern that seperates the different entries.
-/// The list has the form of: (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))
+/// The list has the form of: (column1 = 2,+ column2 = -2.04,+ column3 = true,+ column4 = text,+ column5 = (1.04, 2, false, more text))
 /// 
 /// ## Returns
 /// A vector containing touples of [`(String, Data)`]. The string is the column name, the Data the
@@ -138,20 +138,15 @@ pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Vec<(S
         clean_in = clean_in.trim_end_matches(")").to_string();
     }
     let split = clean_in.split(split_pattern.as_str());
-    let mut list_store: String = String::new();
     let mut list_check = false;
     for entry in split {
         if entry.contains("(") {
             list_check = true;
         }
         if list_check {
-            list_store.push_str(entry);
-            if entry.contains(")") {
-                list_check = false;
-                let new = decode_single_columndata(&list_store);
-                out.push(new);
-            }
-            list_store.push_str(",");
+            list_check = false;
+            let new = decode_single_columndata(entry);
+            out.push(new);
         } else {
             let new = decode_single_columndata(entry);
             out.push(new);

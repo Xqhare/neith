@@ -48,6 +48,10 @@ impl From<(String, Vec<(String, bool)>)> for Table {
 }
 
 impl Table { 
+    /// Create new columns in this table.
+    ///
+    /// ## Returns
+    /// A generic `SuccessMessage`
     pub fn new_columns(&mut self, value: Vec<(String, bool)>) -> Success {
         for entry in value {
             let new_column = Column::from(entry);
@@ -55,6 +59,13 @@ impl Table {
         }
         return Success::SuccessMessage(true);
     }
+    /// Delete data from columns of this table.
+    ///
+    /// ## Returns
+    /// A generic `SuccessMessage`.
+    ///
+    /// ## Errors
+    /// If the supplied column doesn't exist.
     pub fn delete_data(&mut self, indicies: Vec<usize>) -> Result<Success, Error> {
         for index in indicies {
             for column in &mut self.columns {
@@ -63,6 +74,13 @@ impl Table {
         }
         return Ok(Success::SuccessMessage(true));
     }
+    /// Update data from columns of this table.
+    ///
+    /// ## Returns
+    /// A generic `SuccessMessage`.
+    ///
+    /// ## Errors
+    /// If the supplied column doesn't exist.
     pub fn update_data(&mut self, value: Vec<(String, Data)>, indicies: Vec<usize>) -> Result<Success, Error> {
         let name_vec: Vec<String> = value.iter().map(|entry| {entry.0.clone()}).collect();
         for column in &mut self.columns {
@@ -78,6 +96,13 @@ impl Table {
         }
         return Ok(Success::SuccessMessage(true));
     }
+    /// Select data from columns of this table.
+    ///
+    /// ## Returns
+    /// A generic `SuccessMessage`.
+    ///
+    /// ## Errors
+    /// If the supplied column doesn't exist.
     pub fn select_data(&self, coulumn_names: Vec<String>, indicies: Vec<usize>) -> Success {
         let mut found_data: Vec<Data> = Vec::new();
         if coulumn_names.contains(&"*".to_string()) {
@@ -101,6 +126,13 @@ impl Table {
         }
         return Success::Result(found_data);
     }
+    /// Writes new data into columns of this table.
+    ///
+    /// ## Returns
+    /// A generic `SuccessMessage`.
+    ///
+    /// ## Errors
+    /// If the supplied column doesn't exist.
     pub fn new_data(&mut self, value: Vec<(String, Data)>) -> Result<Success, Error> {
         let name_vec: Vec<String> = value.iter().map(|entry| {entry.0.clone()}).collect();
         for column in &mut self.columns {
