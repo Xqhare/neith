@@ -1,6 +1,10 @@
 # NEITH: Neith Enhances Information Through Hierarchy
 Neith is a small, lightweight and BLAZINGLY FAST database.
 
+> [!NOTE]
+> It is not "Production-ready" and it will probably never be, I made this because I could, not because I should (especially with less than 6 months of rust experience).
+> While you can use it as a database, the developer experience is lacking as you can see further down in the example syntax.
+
 The name Neith is derived from Neith, the ancient Egyptian goddess of war, creation, and weaving. She represents the intricate connections and patterns that form the cosmos and foundation of knowledge.
 
 Neith is not made for large projects, or projects that need to do a lot of data intensive work. Neith is made for small projects, with the need for some database storage and simple logic. For large data-sets more ram is needed as Neith holds the entire database in memory from startup, leading to fast reads and writes (except the save to disc of course). Users are strongly discouraged from using complex API requests, this is mainly because it does not support multi-core - maybe at some point, no promises - so performance can be impacted by such requests.
@@ -13,13 +17,21 @@ Having said all this, Neith gives the perfect excuse for a bad performing progra
 
 ## Design and philosophy of Neith
 
+> [!IMPORTANT]
+> Neith is un-opinionated and type-agnostic. As such it will do whatever you tell it to do.
+> It will only check for uniqueness of a value in a column if a column was marked as such.
+
 Neith is designed to do what the user or program is telling it, whatever that is. Neith will execute anything passed to it, as long as it can decode it. There is no hand-holding, Neith will never assume or interpret what the user wants to do, it just does.
 
 I tried to make it as un-opinionated as possible so that it will try to do whatever it is told to do; So beware of what you do!
-For example, you can put whatever you want into any column, be it a number, string, boolean or list. Also the `unique` key entered during column creation is mostly for ease of use, Neith would happily put the same thing twice into a column marked as `unique`. This is by design, Neith will do what you tell it, and only inform you if it encountered an Error or succeeded.
-These design principles are the reason why Neith will not save to disc by itself for example. Neith will not assume what it should do, it will wait for you to tell it what to do.
+For example, you can put whatever you want into any column, be it a number, string, boolean or list. This is by design, Neith will do what you tell it, and only inform you if it encountered an Error or succeeded.
+These design principles are also the reason why Neith will not save to disc by itself. To reiterate, Neith will not assume what it should do, it will wait for you to tell it what to do.
 
 ## Naming
+
+> [!NOTE]
+> Neith was an early ancient Egyptian deity. She was said to be the first and the prime creator, who created the cosmos and all it contains, and that she governs how it functions.
+> Her name was likely originally "nrt" or "She is the terrifying one".
 
 Neith, the ancient Egyptian goddess, was a multifaceted deity revered for her roles in creation, wisdom, weaving, and war. She was one of the most enduring and influential goddesses throughout Egypt's long and storied history and was worshipped from the Pre-dynastic era (c. 6000-3150 BCE) through to the arrival of roman rule (30 BCE), some 4000 years.
 Her primary association was with the city of Sais in the Nile river delta, where she was worshipped as the patron goddess. Often depicted as a woman wearing the red crown of lower Egypt and holding crossed arrows and bow, she symbolised power as well as war.
