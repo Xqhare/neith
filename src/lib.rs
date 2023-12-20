@@ -451,7 +451,7 @@ impl Neith {
         return Ok(());
     }
     /// Check if a table exists. returns `true` if it is found, `false` otherwise.
-    pub fn check_exsistance(&self, name: String) -> bool {
+    pub fn check_existance(&self, name: String) -> bool {
         for table in &self.tables {
             if table.name == name {
                 return true;
