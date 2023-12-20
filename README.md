@@ -1,9 +1,18 @@
 # NEITH: Neith Enhances Information Through Hierarchy
 Neith is a small, lightweight and BLAZINGLY FAST database.
 
+It can be used as a normal on disc database, saving and reading, to and from disc. [More here!](#connecting)
+It can also be used in `ram-mode` meaning that all data is held only in ram, if used this way Neith cannot save it's appstate. [More here!](#connecting)
+Neith has a `job_history` table that can be turned on. [More here!](#job-history)
+
 > [!NOTE]
 > It is not "Production-ready" and it will probably never be, I made this because I could, not because I should (especially with less than 6 months of rust experience).
 > While you can use it as a database, the developer experience is lacking as you can see further down in the example syntax.
+> I am using Neith as a "stable" database for personal projects, but it remains without a working test-suite and some un- or under-tested code. Other code did work when it was tested but may now be broken - It will be fixed if and when I find any bugs.
+> I can only guarantee jank and maybe bugs, but that is a promise I can keep!
+
+> [!IMPORTANT]
+> If you really want to use Neith, please read this readme completely (especially this chapter), I tried my best explaining it.
 
 The name Neith is derived from Neith, the ancient Egyptian goddess of war, creation, and weaving. She represents the intricate connections and patterns that form the cosmos and foundation of knowledge.
 
@@ -25,12 +34,14 @@ Neith is designed to do what the user or program is telling it, whatever that is
 
 I tried to make it as un-opinionated as possible so that it will try to do whatever it is told to do; So beware of what you do!
 For example, you can put whatever you want into any column, be it a number, string, boolean or list. This is by design, Neith will do what you tell it, and only inform you if it encountered an Error or succeeded.
-These design principles are also the reason why Neith will not save to disc by itself. To reiterate, Neith will not assume what it should do, it will wait for you to tell it what to do.
+These design principles are also the reason why Neith will not save to disc by itself.
+
+To reiterate, Neith will not assume what it should do, it will wait for you to tell it what to do.
 
 ## Naming
 
 > [!NOTE]
-> Neith was an early ancient Egyptian deity. She was said to be the first and the prime creator, who created the cosmos and all it contains, and that she governs how it functions.
+> Neith was an early ancient Egyptian deity said to be the first and the prime creator, who created the cosmos and all it contains, and that she governs how it functions.
 > Her name was likely originally "nrt" or "She is the terrifying one".
 
 Neith, the ancient Egyptian goddess, was a multifaceted deity revered for her roles in creation, wisdom, weaving, and war. She was one of the most enduring and influential goddesses throughout Egypt's long and storied history and was worshipped from the Pre-dynastic era (c. 6000-3150 BCE) through to the arrival of roman rule (30 BCE), some 4000 years.
@@ -45,18 +56,25 @@ Her name resonates with the purpose of this database, which aims to weave togeth
 The name Neith embodies the essence of this database, symbolising it's ability to weave together, transform and illuminate the data, much like the goddess herself.
 
 ### Recursive Acronym
-The name is also a recursive acronym:
+As with every project that takes itself seriously, the name is also a recursive acronym:
 
 Neith
+
 Enhances
+
 Information
+
 Through
+
 Hierarchy
 
 ## Data-types
-It supports only basic data-types, floating point numbers, booleans, strings, as well as Lists.
-Signed and unsigned integers are excluded for the sake of simplicity, ease of use and a smaller footprint.
-If you really need to use them, Neith is probably not for you.
+
+> [!IMPORTANT]
+> It supports only basic data-types, floating point numbers, booleans, strings, as well as Lists.
+
+Signed and unsigned integers are excluded for the sake of simplicity and ease of use.
+If you really need to use them, Neith is probably not for you, or you could parse them, up to you really.
 
 ### Types:
 Types are followed by their respective name in the API in parenthesis.
@@ -65,20 +83,40 @@ Types are followed by their respective name in the API in parenthesis.
 - Strings (string)
 - Lists of any type (list) -> wrapped in (), e.g. (example, 1, true)
 
-###### On lists
-
-Lists can contain up to five nested lists.
+> [!TIP]
+> Lists can contain up to five nested lists.
 
 ## API
-Neith has a very simple API. It uses three functions, `connect()`, `execute()`, as well as `close()`.
-The first is only used once to create a connection to the database, any interaction with it is done with the `execute()` function.
-The `execute()` function uses Neithql or nql, a very simple and basic implementation of some sql syntax.
-With the last function you can save the current state of the database to disc. If you are not running in ram-mode that is.
+Neith has a very simple API. It uses these functions, `connect()`, `execute()`, `set_marker()`, `set_job_history()` as well as `save()`.
 
-Note that Neith always returns something for each call. In most operations this is a simple success message containing a `true` boolean.
-The boolean wrapped by the `SuccessMessage` type does not matter; 
-It can also contain the data queried, or an Error encountered during execution.
-For this reason, it is recommended that you bind every query to a variable, marking it with `_` if you want to ignore the returned value.
+`connect()` is only used once to create a connection to the database, for `ram-mode`, or a more detailed explanation check [here!](#connecting)
+
+```
+use neith::Neith;
+
+let mut con = Neith::connect("DataBaseName");
+```
+
+Any interaction with Neith is done with the `execute()` function, this function uses Neithql or nql, a very simple and basic handrolled implementation of some sql syntax.
+For examples on it's use [click here!](#data-interaction)
+
+`save()` let's you can save the current state of the database to disc. If you are not running in ram-mode that is.
+
+Example code:
+```
+use neith::Neith;
+
+let mut con = Neith::connect("test");
+let _ = con.save();
+```
+> [!TIP]
+> Please note that `save()` needs the Neith object, which could involve cloning it.
+
+> [!IMPORTANT]
+> Note that Neith always returns something for each call. In most operations this is a simple success message containing a `true` boolean.
+> The boolean wrapped by the `SuccessMessage` type does not matter; 
+> It can also contain the data queried, or an Error encountered during execution.
+> For this reason, it is recommended that you bind every query to a variable, marking it with `_` if you want to ignore the returned value.
 
 ### Nql or Neith query language
 
@@ -86,131 +124,69 @@ Nql is a very simple sql and mysql inspired syntax for interacting with Neith.
 
 #### Nql reference table
 
+> [!TIP]
+> The table is read left to right, take the position of the command choosen from the list, and use it as the index for any following lists.
+> "!)" marks the end of a command and the "!" is NOT to be typed. Please note that following lists will have one entry less because of this.
+
+> [!CAUTION]
+> The table is always right, if any example code differs from it, it is wrong and needs to be changed.
+
 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 
 | - | - | - | - | - | - | - | 
-| execute( | new | table / column / data | 'tablename' | with / with / ('other_columnname' = 'new_data',+ 'different_column' = '(list, of, data, in, parenthesis)',+ ...)!) | ('columnname' 'unique', ...)!) / ('columnname' 'unique', ...)!) 
+| execute( | new | table / column / data | 'tablename' | with / with / ('other_columnname' = 'new_data',+ 'different_column' = '(list, of, data, in, parenthesis)',+ ...)!) | ('columnname' 'unique', ...)!) / ('columnname' 'unique', ...)!)
 | execute( | delete | table / column / data | with / with / in | 'tablename'!) / 'columnname' / 'tablename' | in / where | 'tablename'!) / ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = 'other data',+ ...]!) |
 | execute( | update | 'tablename' | where | ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = '(other, data, as, list)',+ ...] | with | ('other_columnname' = 'new_data',+ 'different_column' = '(list, of, data, in, parenthesis)',+ ...)!) | 
 | execute( | select | (columnname0, columnname1, ...)  OR * | from | 'tablename' | where | ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = 'other data',+ ...]!) |
 | execute( | get | min / max / len | in / in / of |  'columnname' / 'columnname' / 'tablename'!) | from / from | 'tablename'!) / 'tablename'!) |
 
-###### Notes on using the reference table
-The table is read left to right, here the example for any `new` nql syntax:
+##### Notes on using the reference table
+The table is read left to right, please follow this example. After understanding how the table is used you will have learned all the nql syntax in existance!
 
-By reading the table left to right in the first row, we start with 'execute(' followed by 'new'. The next field has 3 possibilities, 'table', 'column' or 'data'. Please note that the order of the elements does not change, so syntax need for 'column' will always be second in the list, as long as any syntax is applicable.
-With this in mind, we know that next we enter the 'tablename', and then choose the right next part in the correct place in the list. 
-E.g. 'data' was chosen, it is third in the list, so now '('other_columnname' = 'new_data',+ ...)!)' has to come next. 
-The '!)' marks the end of the command, and the ! is NOT to be typed. It servers as a marker for ease of use during reference.
-Each item of 'name = data' has to be separated by ',+'. Neith splits the nql syntax in lists by this marker, so your data should not contain this.
-The marker can be changed with the 'con.set_marker("your_pattern_here")'. If used make sure to always execute and to do it as early as possible in your code.
+By reading the table left to right in the first row, we start with `execute(` followed by `new`. The next field has 3 possibilities, `table`, `column` or `data`. Please note that the order of the elements does not change, so syntax need for `column` will always be second in the list, as long as any syntax is applicable.
+With this in mind, we know that next we enter the `tablename`, and then choose the right next part in the correct place in the list. 
+E.g. `data` was chosen, it is third in the list, so now `('other_columnname' = 'new_data',+ ...)!)` has to come next. 
+The `!)` marks the end of the command, and the ! is NOT to be typed. It serves as a marker for ease of use during reference.
+Each item of `name = data` has to be separated by `,+`. Neith splits the nql syntax in lists by this marker, so your data should not contain this.
+The marker can be changed with the `con.set_marker("your_pattern_here")`. If used make sure to always execute and to do it as early as possible in your code.
 
+
+Example code:
 ```
-let mut con = Neith::connect("test.neithdb");
+let mut con = Neith::connect("test");
 let new_table = con.execute("new table testtable with (column1 true, column2 false, column3 false)");
 let new_columns = con.execute("new column testtable with (column4 false, column5 false)");
-let new_data_column1 = con.execute("new data testtable (column1 = 1, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
-let new_data_column2 = con.execute("new data testtable (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
+let new_data_column1 = con.execute("new data testtable (column1 = 1,+ column2 = -2.04,+ column3 = true,+ column4 = text,+ column5 = (1.04,+ 2, false,+ more text))");
+let new_data_column2 = con.execute("new data testtable (column1 = 2,+ column2 = -2.04,+ column3 = true,+ column4 = text,+ column5 = (1.04,+ 2,+ false,+ more text))");
+let _ = con.save();
 ```
 
 ### Connecting
-It is called with the `connection(path)` function, the returned type is the connection to the database.
 
-### Data interaction
-For data interaction of any kind the `execute()` function is used. It takes a `&str` as an argument and returns the appropriate data, a confirmation of success or error.
-Example syntax is explained above.
+You can start Neith with one of three ways:
 
-#### Writing data
+1. `connect("DBname")`
+    - Most probably the way you want to start up Neith. It takes a `&str` as an argument for the Database name.
+    - Setting of `job_history ` or `split_marker` with their own function-calls.
+2. `connect_ram_mode(job_history: bool)`
+    - The other way you could want to start up Neith. Doesn't need a name.
+    - Setting of `job_history` in argument, `split_marker` with its own function-call.
+3. (NOT RECOMMENDED) `new(path: PathBuf, ram_mode: bool, job_history: bool)`
+    - Needs a valid path to the database-location, as well as setting of `ram_mode` and `job_history`.
 
-##### Tables
+Example code:
 ```
-let con = Neith::connect("test.neithdb");
-let new_table = con.execute("new table testtable with (column1 true, column2 false, column3 false)");
-```
-This creates a table with the name `testtable` and the columns `column1`, `column2` and `column3`. 
-
-Each column needs a `unique_bool` boolean demarcating if the column contents will be unique (eg. the ID).
-
-Neith does check if the table exists, and returns a success, it will however NOT write a table with the same name again.
-Neith will treat two executions of the `"new table 'same_tablename'"` as one, however if the second execution would add more columns, they are ignored.
-This is done because Neith works with the first table of any given name it has, but will save only the last table of that name.
-That would be confusing behaviour so only one table per name is allowed.
-
-###### Notes on tables
-Tables cannot be renamed, nor the name or unique boolean of their columns changed.
-
-##### Columns
-```
-let con = Neith::connect("test.neithdb");
-let new_column = con.execute("new column testtable with column4 and column5, unique");
-```
-This extends the created `testable` with `column4` and `column5`.
-
-```
-let con = Neith::connect("test.neithdb");
-let update1 = con.execute("update testtable where [column2 = 1 and column4 = text] with (column3 = true)");
-let update2 = con.execute("update testtable where [column2 = -2.04 or column2 = 1] with (column3 = false)");
-let update3 = con.execute("update testtable where [column4 = text not column2 = -2.04] with (column5 = (-1, 1.04, true, test text))");
+// 1.
+let mut connect = Neith::connect("test");
+// 2.
+let mut connect_ram_mode = Neith::connect_ram_mode(false);
+// 3.
+let mut new = Neith::new("MyPath", false, false);
 ```
 
-Updates a single column entry of a table.
-
-##### Rows
-
-```
-let con = Neith::connect("test.neithdb");
-let new_data_column1 = con.execute("new data testtable (column1 = 1, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
-let new_data_column2 = con.execute("new data testtable (column1 = 2, column2 = -2.04, column3 = true, column4 = text, column5 = (1.04, 2, false, more text))");
-let new_data_column3 = con.execute("new data testtable (column1 = 3, column2 = 1, column4 = text)");
-let new_data_column4 = con.execute("new data testtable (column1 = 4, column2 = 1, column4 = text)");
-```
-
-#### Deleting data
-
-##### Tables
-
-```
-let con = Neith::connect("test.neithdb");
-let _del_row = con.execute("delete row in testtable where [column1 = 4 and column4 = text]");
-let del_column = con.execute("delete column with column5 and column4 in testtable");
-let del_table = con.execute("delete table with testtable");
-```
-
-##### Rows
-Deletes an entire row.
-
-#### Reading data
-
-```
-let con = Neith::connect("test.neithdb");
-let select1 = con.execute("select * from testtable");
-let select2 = con.execute("select (column1, column2, column3, column4) from testtable");
-```
-
-Selects entry in specified column. * is valid for all columns.
-Select returns data ALWAYS in the order it was found in the table, e.g. if you search for 'column7, column1, column3' the results will be in the order 'column1, column3, column7'.
-
-#### Convenience functions:
-
-```
-let con = Neith::connect("test.neithdb");
-let get_min = con.execute("get min in column1 from testtable");
-let get_max = con.execute("get max on column1 from testtable");
-let get_len = con.execute("get len of testtable");
-```
-#### Saving data to disc
-
-If Neith is set up using the `connect()` function, it will read any data found at the specified path, and do any operations on the data in ram. Ending the program without `.close()`-ing the connection, will not save the data from ram to disc, and will behave like a Neith instance in `ram-mode`, just without some benefits of the flag and some more overhead.
-After a connection has been closed, it has to be reopened using the `connect()` function - this is resource intensive, so only save during run-time if absolutely necessary.
-
-```
-let con = Neith::connect("test.neithdb");
-con.close();
-```
-This opens and immediatly closes (or saves the state of) Neith.
-
-### `job_history`-Table
+#### Job History
 
 Neih comes with a 'job-history' table that can be turned on during connection creation. This table saves the following:
+As saving of this data can create unwanted ram and cpu overhead(Not much, however with the small scale of Neith, it could matter to you.), the feature is, by default, turned off.
 
 - id (unique)
 - command (the complete command typed in)
@@ -218,24 +194,197 @@ Neih comes with a 'job-history' table that can be turned on during connection cr
 - duration (how long the operation took in microseconds)
 
 This table can be queried just like any other table. You can change the contents too, if you wish. Although that really isn't recommended.
-As this feature is experimental, it is off by default.
+
+> [!TIP]
+> If you choose to use it, please use `set_job_history(true)` as the first thing after creating the connection.
+> If you want to no longer use it, delete the line containing `set_job_history(true)` and also delete the table called `job_history` if you wish to do so.
+> To query the `job-history`, just use the `execute()` function as you would with any other table.
 
 It can be turned on by: 
 
 ```
-let con = Neith::connect("test.neithdb");
-let job_his_on = con.set_job_history(true);
+let con = Neith::connect("test");
+let _ = con.set_job_history(true);
 ```
 
-#### Notes on using the `job_history`-Table
+> [!CAUTION]
+> Just treat it as read-only.
+> Even though it is not. Trust me.
+> The table is write-able, so you could do what you want with it. I would recommend against it though. So if something breaks it is your fault, I warned you.
 
-If you choose to use it, please use `set_job_history(true)` as the first thing after creating the connection.
-If you want to no longer use it, delete the line containing `set_job_history(true)` and also delete the table called `job_history` if you wish to do so.
-To query the `job-history`, just use the `execute()` function as you would with any other table.
+#### Split marker
 
-###### Notes on the `job_history`-Table
+> [!IMPORTANT]
+> By default it is `,+`. It can be changed to any string you desire using the `set_marker("your_pattern")` function.
+> If changed, make sure to call as first thing at every startup.
 
-Just treat it as read-only.
-Even though it is not. Trust me.
-The table is write-able, so you could do what you want with it. I would recommend against it though. So if something breaks it is your fault, I warned you.
-As saving of this data can create unwanted ram and cpu overhead(Not much, however with the small scale of Neith, it could matter to you.), the feature is, by default, turned off.
+> [!CAUTION]
+> Some Neith-code is untested. This belongs to that category!
+
+By default Neith splits some (please reference the table) lists up with a special split pattern, refered to as `marker`.
+It is: `,+`.
+
+This was done for better support of storing things like text-documents or code-snippets. If your data contains the default symbol Neith WILL mess up your data and write only up to the first occurence of the split marker, whatever it is set to.
+
+As this behaviour may not be preferable for every use-case I provided functionality to set it to any `String` you want.
+The marker can be changed with the `con.set_marker("your_pattern_here")`. If used make sure to always execute and to do it as early as possible in your code.
+For consistent results during parsing, please set as first thing during every start up.
+
+Example code:
+```
+let con = Neith::connect("test");
+let _ = con.set_marker(",");
+```
+
+### Data interaction
+
+For data interaction of any kind the `execute()` function is used. It takes a `&str` as an argument and returns the appropriate data, a confirmation of success or error.
+Example syntax is explained above in the [Nql reference table.](#nql-reference-table)
+
+More detailed explanation in the following sub-chapters!
+
+> [!NOTE]
+> The `execute()` function will always return something, in most cases it is a simple `SuccessMessage` signaling that all went well.
+> In other cases this will be the queried data or an error.
+
+#### Writing data
+
+Writing of data can be done in two ways, each dependend on your needs.
+
+1. New data
+2. Updating exsisting data
+
+When to use each is easy, use new if you want to write a new entry into the table, and update if you want to update the data of an exsisting entry.
+
+##### New table
+
+To create a new table make use of the `execute()` function.
+
+> [!NOTE]
+> Each column needs a `unique_bool` boolean demarcating if the column contents will be unique (eg. the ID).
+> Tables cannot be renamed, nor the name or unique boolean of their columns changed.
+
+Neith does check if the table exists, and returns a success, however it will NOT write a table with the same name again.
+Neith will treat two executions of the `"new table 'same_tablename'"` as one, however if the second execution would add more columns, they are ignored.
+This is done because Neith works with the first table of any given name it has, but will save only the last table of that name.
+That would be confusing behaviour so only one table per name is allowed.
+
+Example code:
+```
+let con = Neith::connect();
+let _new_table = con.execute("new table testtable with (column1 true, column2 false, column3 false)");
+let _new_columns = con.execute("new column testtable with (column4 false, column5 false)");
+```
+
+The first line in the example above, establishes the database connection.
+The second line creates a new table with the name `testtable` and the columns `column1`, `column2`, `column3`, with only `column1` containing `unique` values, e.g. an ID.
+In the third line `testtable` is extended with `column4` and `column5`.
+
+##### New data
+
+Example code:
+```
+let mut con = Neith::connect("test");
+let new_data_column1 = con.execute("new data testtable (column1 = 1,+ column2 = -2.04,+ column3 = true,+ column4 = text,+ column5 = (1.04,+ 2, false,+ more text))");
+let new_data_column2 = con.execute("new data testtable (column1 = 2,+ column2 = -2.04,+ column3 = true,+ column4 = text,+ column5 = (1.04,+ 2,+ false,+ more text))");
+```
+
+The first line in the example above, establishes the database connection.
+The second and third line write a new entry into `testtable` with the data supplied in parenthesis.
+
+#### Updating data
+
+Neith supports conditional statements for updating data. Supported are `and`, `not`, `xor`, and `or`.
+
+Example code:
+```
+let con = Neith::connect("test.neithdb");
+let update1 = con.execute("update testtable where [column2 = 1,+ and column4 = text] with (column3 = true)");
+let update2 = con.execute("update testtable where [column2 = -2.04,+ or column2 = 1] with (column3 = false)");
+let update3 = con.execute("update testtable where [column4 = text,+ not column2 = -2.04] with (column5 = (-1, 1.04, true, test text))");
+```
+
+The first line in the example above, establishes the database connection.
+The second line updates every row in `testtable` where the conditions in square brackets are met, by setting `column3` to true.
+The third line updates every row in `testtable` where the conditions in square brackets are met, by setting `column3` to false.
+In the final line every row in `testtable` is updated by setting `column5` to the list (-1, 1.04, true, test text), where the conditions in square brackets are met.
+
+#### Deleting data
+
+You can delete rows, columns or entire tables.
+There is nql syntax for each.
+
+Example code:
+```
+let con = Neith::connect("test.neithdb");
+let del_row = con.execute("delete data in testtable where [column1 = 4 and column4 = text]");
+let del_column = con.execute("delete column with column5 and column4 in testtable");
+let del_table = con.execute("delete table with testtable");
+```
+
+The first line in the example above, establishes the database connection.
+The second line deletes an entire row, or entry, in `testtable` where the conditions in square brackets are met.
+The third line deletes `column5` and `column4` in `testtable` with all their entries.
+In the last line the table `testtable` is deleted.
+
+#### Reading data
+
+Neith supports conditional statements for querying data. Supported are `and`, `not`, `xor`, and `or`.
+
+> [!NOTE]
+> The * symbol is supported with the same usage as in sql, meaning 'all columns'.
+> Select returns data ALWAYS in the order it was found in the table, e.g. if you search for 'column7, column1, column3' the results will be in the order 'column1, column3, column7'.
+
+Example code:
+```
+let con = Neith::connect("test");
+let select1 = con.execute("select * from testtable");
+let select2 = con.execute("select (column1, column2, column3, column4) from testtable");
+let select3 = con.execute("select (column1, column2) from testtable where [column1 = 1,+ and column2 = -2.04]");
+```
+
+The first line in the example above, establishes the database connection.
+The second line selects all columns and entries from `testtable`.
+The third line selects `column1`, `column2`, `column3`, and `column4` and all entries from `testtable`.
+In the last line `column1`, `column2` are selected from `testtable` with the entry where the conditions in square brackets are met.
+
+#### Convenience functions:
+
+I have coded three "convinience" functions.
+
+1. `get_min`
+    - To get the minimum entry of any column.
+2. `get_max`
+    - To get the maximum entry of any column.
+3. `get_len`
+    - To get the length of any table. (Best used as id getter for table entries.)
+
+Example code:
+```
+let con = Neith::connect("test.neithdb");
+let get_min = con.execute("get min in column1 from testtable");
+let get_max = con.execute("get max on column1 from testtable");
+let get_len = con.execute("get len of testtable");
+```
+
+The first line in the example above, establishes the database connection.
+The second line gets the minimum of all data in `column1` in `testtable`.
+The third line gets the maximum of all data in `column1` in `testtable`.
+In the last line the length of `testtable` is returned, meaning a count of the lenght, e.g a table with 0 entries would return 0, a table with 1 entry 1, ...
+
+#### Saving data to disc
+
+If Neith is set up using the `connect()` function, it will read any data found at the specified path, and do any operations on the data in ram. 
+Ending the program without `.close()`-ing the connection, will not save the data from ram to disc, and will behave like a Neith instance in `ram-mode`, just without some benefits of the flag and some more overhead.
+
+> [!IMPORTANT]
+> After a connection has been closed, it has to be reopened using the `connect()` function - this is resource intensive, so only save during run-time if absolutely necessary.
+
+Example code:
+```
+let con = Neith::connect("test.neithdb");
+let _ = con.save();
+```
+
+This opens and immediatly saves the state of Neith.
+
