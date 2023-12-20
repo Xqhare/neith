@@ -2,7 +2,9 @@
 Neith is a small, lightweight and BLAZINGLY FAST database.
 
 It can be used as a normal on disc database, saving and reading, to and from disc. [More here!](#connecting)
+
 It can also be used in `ram-mode` meaning that all data is held only in ram, if used this way Neith cannot save it's appstate. [More here!](#connecting)
+
 Neith has a `job_history` table that can be turned on. [More here!](#job-history)
 
 > [!NOTE]
@@ -97,10 +99,10 @@ use neith::Neith;
 let mut con = Neith::connect("DataBaseName");
 ```
 
-Any interaction with Neith is done with the `execute()` function, this function uses Neithql or nql, a very simple and basic handrolled implementation of some sql syntax.
+Any interaction with Neith is done with the `execute()` function, this function uses Neithql or nql, a very simple and basic hand-rolled implementation of some sql syntax.
 For examples on it's use [click here!](#data-interaction)
 
-`save()` let's you can save the current state of the database to disc. If you are not running in ram-mode that is.
+`save()` let's you can save the current state of the database to disc. If you are not running in `ram-mode` that is.
 
 Example code:
 ```
@@ -125,7 +127,7 @@ Nql is a very simple sql and mysql inspired syntax for interacting with Neith.
 #### Nql reference table
 
 > [!TIP]
-> The table is read left to right, take the position of the command choosen from the list, and use it as the index for any following lists.
+> The table is read left to right, take the position of the command chosen from the list, and use it as the index for any following lists.
 > "!)" marks the end of a command and the "!" is NOT to be typed. Please note that following lists will have one entry less because of this.
 
 > [!CAUTION]
@@ -140,7 +142,7 @@ Nql is a very simple sql and mysql inspired syntax for interacting with Neith.
 | execute( | get | min / max / len | in / in / of |  'columnname' / 'columnname' / 'tablename'!) | from / from | 'tablename'!) / 'tablename'!) |
 
 ##### Notes on using the reference table
-The table is read left to right, please follow this example. After understanding how the table is used you will have learned all the nql syntax in existance!
+The table is read left to right, please follow this example. After understanding how the table is used you will have learned all the nql syntax in existence!
 
 By reading the table left to right in the first row, we start with `execute(` followed by `new`. The next field has 3 possibilities, `table`, `column` or `data`. Please note that the order of the elements does not change, so syntax need for `column` will always be second in the list, as long as any syntax is applicable.
 With this in mind, we know that next we enter the `tablename`, and then choose the right next part in the correct place in the list. 
@@ -221,10 +223,10 @@ let _ = con.set_job_history(true);
 > [!CAUTION]
 > Some Neith-code is untested. This belongs to that category!
 
-By default Neith splits some (please reference the table) lists up with a special split pattern, refered to as `marker`.
+By default Neith splits some (please reference the table) lists up with a special split pattern, referred to as `marker`.
 It is: `,+`.
 
-This was done for better support of storing things like text-documents or code-snippets. If your data contains the default symbol Neith WILL mess up your data and write only up to the first occurence of the split marker, whatever it is set to.
+This was done for better support of storing things like text-documents or code-snippets. If your data contains the default symbol Neith WILL mess up your data and write only up to the first occurrence of the split marker, whatever it is set to.
 
 As this behaviour may not be preferable for every use-case I provided functionality to set it to any `String` you want.
 The marker can be changed with the `con.set_marker("your_pattern_here")`. If used make sure to always execute and to do it as early as possible in your code.
@@ -244,17 +246,17 @@ Example syntax is explained above in the [Nql reference table.](#nql-reference-t
 More detailed explanation in the following sub-chapters!
 
 > [!NOTE]
-> The `execute()` function will always return something, in most cases it is a simple `SuccessMessage` signaling that all went well.
+> The `execute()` function will always return something, in most cases it is a simple `SuccessMessage` signalling that all went well.
 > In other cases this will be the queried data or an error.
 
 #### Writing data
 
-Writing of data can be done in two ways, each dependend on your needs.
+Writing of data can be done in two ways, each dependent on your needs.
 
 1. New data
-2. Updating exsisting data
+2. Updating existing data
 
-When to use each is easy, use new if you want to write a new entry into the table, and update if you want to update the data of an exsisting entry.
+When to use each is easy, use new if you want to write a new entry into the table, and update if you want to update the data of an existing entry.
 
 ##### New table
 
@@ -350,7 +352,7 @@ In the last line `column1`, `column2` are selected from `testtable` with the ent
 
 #### Convenience functions:
 
-I have coded three "convinience" functions.
+I have coded three "convenience" functions.
 
 1. `get_min`
     - To get the minimum entry of any column.
@@ -370,7 +372,7 @@ let get_len = con.execute("get len of testtable");
 The first line in the example above, establishes the database connection.
 The second line gets the minimum of all data in `column1` in `testtable`.
 The third line gets the maximum of all data in `column1` in `testtable`.
-In the last line the length of `testtable` is returned, meaning a count of the lenght, e.g a table with 0 entries would return 0, a table with 1 entry 1, ...
+In the last line the length of `testtable` is returned, meaning a count of the length, e.g a table with 0 entries would return 0, a table with 1 entry 1, ...
 
 #### Saving data to disc
 
@@ -386,5 +388,5 @@ let con = Neith::connect("test.neithdb");
 let _ = con.save();
 ```
 
-This opens and immediatly saves the state of Neith.
+This opens and immediately saves the state of Neith.
 
