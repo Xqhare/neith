@@ -422,4 +422,4 @@ This opens and immediately saves the state of Neith.
 
 ##### Saving implementation
 
-Neith will save the database at the supplied path and the name during creation, with the extension `.neithdb`. This is just a json file, which is also the reason for subpar performance during saving and connecting of a medium to large database. This does also mean that a migration from Neith to almost any other database should be pretty easy.
+Neith will save the database at the supplied path and the name during creation, with the extension `.neithdb`. This is just a `json` file, which is also the reason for subpar performance during saving and connecting of a medium to large database. This does also mean that a migration from Neith to almost any other database should be pretty easy.
