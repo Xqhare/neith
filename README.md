@@ -1,7 +1,7 @@
 # NEITH: Neith Enhances Information Through Hierarchy
 Neith is a small, lightweight and BLAZINGLY FAST database.
 
-It can be used as a normal on disc database, saving and reading, to and from disc. [More here!](#connecting)
+It can be used as a normal, on disc database; saving and reading, to and from disc respectively. [More here!](#connecting)
 
 It can also be used in `ram-mode` meaning that all data is held only in ram, if used this way Neith cannot save it's appstate. [More here!](#connecting)
 
@@ -29,7 +29,7 @@ Having said all this, Neith gives the perfect excuse for a bad performing progra
 ## Design and philosophy of Neith
 
 > [!IMPORTANT]
-> Neith is un-opinionated and type-agnostic. As such it will do whatever you tell it to do.
+> Neith is un-opinionated and quite type-agnostic for a rust program. As such it will do whatever you tell it to do.
 > It will only check for uniqueness of a value in a column if a column was marked as such.
 
 Neith is designed to do what the user or program is telling it, whatever that is. Neith will execute anything passed to it, as long as it can decode it. There is no hand-holding, Neith will never assume or interpret what the user wants to do, it just does.
@@ -39,6 +39,36 @@ For example, you can put whatever you want into any column, be it a number, stri
 These design principles are also the reason why Neith will not save to disc by itself.
 
 To reiterate, Neith will not assume what it should do, it will wait for you to tell it what to do.
+
+### ACID Compliance
+
+ACID is a set of properties of database transactions intended to gurantee data validity despite errors and other mishaps.
+
+#### Atomicity
+
+> Atomicity gurantees that each transaction is treated as a single unit, which either succeeds of fails completely.
+
+Neith treats each call of the `execute()` function as a transaction unit, and will return either a success message or error, depending on the state of the transaction.
+
+#### Consistency
+
+> Consitency ensures that a transaction can only bring the database from one consistent state to another, meaning that any data written to the database must be valid according to all defined rules.
+
+Neith decodes and checks each query made by the user first, and only after confirming it to be a valid query Neith will execute it. This should prevent any illegal transaction leading to a ccorrupt database.
+
+#### Isolation
+
+> Isolation ensures that concurrent execution of transactions leaves the database in the same state that would have been obtained if the transactions were executed sequentially.
+
+Neith cannot execute transactions concurrently.
+
+#### Durability
+
+> Durability guarantees that once a transaction has been committed, it will remain commited even in the case of a system failure.
+
+Neith does not save the state to disc automatically, and if used in `ram-mode` it cannot save the state at all. So it is up to the user to ensure that a save to disc happens at appropriate points in their program.
+
+Maybe I will implement a flag for automatic saving. This however is a compute intensive operation, so it would probably default to `off` just like with the `job-history` table.
 
 ## Naming
 
@@ -73,7 +103,7 @@ Hierarchy
 ## Data-types
 
 > [!IMPORTANT]
-> It supports only basic data-types, floating point numbers, booleans, strings, as well as Lists.
+> It supports only basic data-types: floating point numbers, booleans, strings, as well as Lists.
 
 Signed and unsigned integers are excluded for the sake of simplicity and ease of use.
 If you really need to use them, Neith is probably not for you, or you could parse them, up to you really.
@@ -377,16 +407,17 @@ In the last line the length of `testtable` is returned, meaning a count of the l
 #### Saving data to disc
 
 If Neith is set up using the `connect()` function, it will read any data found at the specified path, and do any operations on the data in ram. 
-Ending the program without `.close()`-ing the connection, will not save the data from ram to disc, and will behave like a Neith instance in `ram-mode`, just without some benefits of the flag and some more overhead.
+Ending the program without `.save()`-ing the connection, will not save the data from ram to disc, and will behave like a Neith instance in `ram-mode`, just without some benefits of the flag and slighlty more overhead.
 
 > [!IMPORTANT]
-> After a connection has been closed, it has to be reopened using the `connect()` function - this is resource intensive, so only save during run-time if absolutely necessary.
+> After a connection has been closed, it has to be reopened using the `connect()` function - this is resource intensive, so only save during run-time if necessary.
 
 Example code:
 ```
-let con = Neith::connect("test.neithdb");
+let con = Neith::connect("test");
 let _ = con.save();
 ```
 
 This opens and immediately saves the state of Neith.
 
+Neith will save the database at the supplied path and the name during creation, with the extension `.neithdb`. This is just a json file, which is also the reason for subpar performance during saving and connecting of a medium to large database. This does also mean that a migration from Neith to almost any other database should be pretty easy.
