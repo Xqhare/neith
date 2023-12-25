@@ -68,7 +68,7 @@ Neith cannot execute transactions concurrently.
 
 Neith does not save the state to disc automatically, and if used in `ram-mode` it cannot save the state at all. So it is up to the user to ensure that a save to disc happens at appropriate points in their program.
 
-Maybe I will implement a flag for automatic saving. This however is a compute intensive operation, so it would probably default to `off` just like with the `job-history` table.
+Maybe I will implement a flag for automatic saving. This however is a [compute intensive operation](#saving-implementation), so it would probably default to `off` just like with the `job-history` table.
 
 ## Naming
 
@@ -419,5 +419,7 @@ let _ = con.save();
 ```
 
 This opens and immediately saves the state of Neith.
+
+##### Saving implementation
 
 Neith will save the database at the supplied path and the name during creation, with the extension `.neithdb`. This is just a json file, which is also the reason for subpar performance during saving and connecting of a medium to large database. This does also mean that a migration from Neith to almost any other database should be pretty easy.
