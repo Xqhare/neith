@@ -235,7 +235,8 @@ This table can be queried just like any other table. You can change the contents
 > [!TIP]
 > If you choose to use it, please use `set_job_history(true)` as the first thing after creating the connection.
 > If you want to no longer use it, delete the line containing `set_job_history(true)` and also delete the table called `job_history` if you wish to do so.
-> To query the `job-history`, just use the `execute()` function as you would with any other table.
+> To query the `job_history`, just use the `execute()` function as you would with any other table.
+> E.g. `execute("select * from job_history")`.
 
 It can be turned on by: 
 
@@ -491,6 +492,17 @@ for column in read_data {
     let this_column = column.get_list().unwrap();
     // println("{:?}", this_column);
     assert_eq!(this_column.len(), 12);
+}
+
+// Reading the job table
+let history = con.execute("select * from job_history").unwrap().get_result().unwrap();
+let ids = history[0].get_list().unwrap();
+let bindings = history[1].get_list().unwrap();
+let dates = history[2].get_list().unwrap();
+let durations = history[3].get_list().unwrap();
+for id0 in ids {
+    let id = id0.get_float().unwrap().to_string().parse::<usize>().unwrap();
+    println!("(id = {id}, command = {:?}, time = {:?}, duration = {:?})", bindings[id], dates[id], durations[id]);
 }
 
 // Getters
