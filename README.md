@@ -198,12 +198,14 @@ You can start Neith with one of three ways:
 
 1. `connect("DBname")`
     - Most probably the way you want to start up Neith. It takes a `&str` as an argument for the Database name.
+        - The name can be a valid path for control where the database is saved to, or read from. Please keep in mind that it has to be a valid path and filename with or without extension.
     - Setting of `job_history ` or `split_marker` with their own function-calls.
 2. `connect_ram_mode(job_history: bool)`
     - The other way you could want to start up Neith. Doesn't need a name.
     - Setting of `job_history` in argument, `split_marker` with its own function-call.
-3. (NOT RECOMMENDED) `new(path: PathBuf, ram_mode: bool, job_history: bool)`
-    - Needs a valid path to the database-location, as well as setting of `ram_mode` and `job_history`.
+3. `new(path: PathBuf, ram_mode: bool, job_history: bool)`
+    - Needs a valid path to the database-location. Please keep in mind that it has to be a valid path and filename with or without extension.
+    - Setting of `ram_mode` and `job_history` in arguments.
 
 Example code:
 ```
