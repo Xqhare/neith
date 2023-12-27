@@ -66,11 +66,16 @@ impl Table {
     ///
     /// ## Errors
     /// If the supplied column doesn't exist.
-    pub fn delete_data(&mut self, indicies: Vec<usize>) -> Result<Success, Error> {
+    pub fn delete_data(&mut self, mut indicies: Vec<usize>) -> Result<Success, Error> {
+        // Forgot that deleting an entry moves the entire vector to the left by one; this is now
+        // included.
+        indicies.sort();
+        let mut counter: usize = 0;
         for index in indicies {
             for column in &mut self.columns {
-                column.delete_data(index);
+                column.delete_data(index - counter);
             }
+            counter += 1;
         }
         return Ok(Success::SuccessMessage(true));
     }
