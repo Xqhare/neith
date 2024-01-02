@@ -98,11 +98,11 @@ impl Neith {
     /// A toggle for job-history, set to true to record, set to false to not record.
     pub fn set_job_history(&mut self, value: bool) -> Success {
         self.job_history = value;
-        if self.check_existance("job_history".to_string()) && self.job_history {
+        if self.exists_table("job_history".to_string()) && self.job_history {
             let index = self.search_for_table("job_history".to_string()).unwrap();
             self.job_history_table_index = Some(index);
             return Success::SuccessMessage(value);
-        } else if !self.check_existance("job_history".to_string()) && self.job_history {
+        } else if !self.exists_table("job_history".to_string()) && self.job_history {
             let table_columns: Vec<(String, bool)> = vec![("id".to_string(), true), ("command".to_string(), false), ("time".to_string(), false), ("duration".to_string(), false)];
             let table_prop = ("job_history".to_string(), table_columns);
             let job_history_table = Table::from(table_prop);
@@ -452,7 +452,7 @@ impl Neith {
         return Ok(());
     }
     /// Check if a table exists. returns `true` if it is found, `false` otherwise.
-    fn check_existance(&self, name: String) -> bool {
+    pub fn exists_table(&self, name: String) -> bool {
         for table in &self.tables {
             if table.name == name {
                 return true;
