@@ -522,3 +522,11 @@ let del_column = con.execute("delete column with seniority in testtable").unwrap
 let del_table = con.execute("delete table with testtable").unwrap();
 
 ```
+
+
+## Acknowledgments
+Thanks to the open-source community for providing invaluable tools and libraries.
+Used in this project:
+- [json](https://crates.io/crates/json)
+- [chrono](https://crates.io/crates/chrono)
+
