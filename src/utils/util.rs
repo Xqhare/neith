@@ -161,8 +161,8 @@ pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Vec<(S
 /// ## Returns
 /// A touple of `(String, Data)` where `String` is the column name and `Data` is the data.
 pub fn decode_single_columndata(single_val: &str) -> (String, Data) {
-    // I get: columnname = data
-    let mut cleaned_input = single_val.replace("=", "");
+    // I get: "columnname = data"
+    let mut cleaned_input = single_val.replacen("=", "", 1);
     if cleaned_input.contains("]") {
         let temp = cleaned_input.replace("]", "");
         cleaned_input = temp;
