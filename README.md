@@ -8,7 +8,7 @@ It can also be used in `ram-mode` meaning that all data is held only in ram, if 
 Neith has a `job_history` table that can be turned on, for saving some basic usage and duration logging. [More here!](#job-history)
 
 > [!NOTE]
-> It is not "Production-ready" and it will probably never be, I made this because I could, not because I should (especially with less than 6 months of rust experience).
+> It is not "Production-ready" and it will probably never be, I made this because I could, not because I should. I do consider it "stable" though, but take that with a grain of salt.
 > While you can use it as a database, the developer experience is lacking as you can see further down in the example syntax.
 > I am using Neith as a "stable" database for personal projects, but it remains with some un- or under-tested code. Other code did work when it was tested but may now be broken - It will be fixed if and when I find any bugs.
 > I can only guarantee jank and maybe bugs, but that is a promise I can keep!
