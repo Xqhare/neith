@@ -1,4 +1,3 @@
-#![feature(iter_intersperse)]
 use std::{io::{self, Error}, path::{Path, PathBuf}, time::Instant};
 
 use chrono;

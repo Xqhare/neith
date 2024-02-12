@@ -169,7 +169,7 @@ pub fn decode_single_columndata(single_val: &str) -> (String, Data) {
     }
     let split_input = cleaned_input.split_whitespace();
     let name = split_input.clone().take(1).collect::<String>();
-    let data = Data::from(split_input.skip(1).intersperse(" ").collect::<String>());
+    let data = Data::from(split_input.skip(1).map(|d| format!("{} ", d)).collect::<String>().trim_end().to_string());
     return (name, data);
 }
 
