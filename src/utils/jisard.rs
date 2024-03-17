@@ -26,22 +26,29 @@ pub fn read_json_from_neithdb_file<P>(filename: P) -> JsonValue where P: AsRef<P
 /// Can `JsonError` during json encoding or saving to disc.
 pub fn write_neithdb_file(neith: Neith) -> Result<Success> {
     let mut json_tables = JsonValue::new_object();
-    for table in &neith.tables {
-        let tablename = &table.name;
-        let mut json_table = JsonValue::new_object();
-        for column in &table.columns {
-            let columnname = &column.name;
-            let unique = column.unique;
-            let mut data_array = JsonValue::new_array();
-            for data in &column.contents.all_row_data {
-                let _answ = data_array.push(decode_data_to_jsonval(data.clone()))?;
+    for tmp_table in &neith.tables {
+        let table_store = tmp_table.lock();
+        if table_store.is_ok() {
+            let table = table_store.unwrap();
+            let tablename = &table.name;
+            let mut json_table = JsonValue::new_object();
+            for column in &table.columns {
+                let columnname = &column.name;
+                let unique = column.unique;
+                let mut data_array = JsonValue::new_array();
+                for data in &column.contents.all_row_data {
+                    let _answ = data_array.push(decode_data_to_jsonval(data.clone()))?;
+                }
+                let mut json_column = JsonValue::new_object();
+                let _answ0 = json_column.insert("unique", JsonValue::Boolean(unique))?;
+                let _answ1 = json_column.insert("entry", data_array)?;
+                let _answ3 = json_table.insert(&columnname, json_column)?;
             }
-            let mut json_column = JsonValue::new_object();
-            let _answ0 = json_column.insert("unique", JsonValue::Boolean(unique))?;
-            let _answ1 = json_column.insert("entry", data_array)?;
-            let _answ3 = json_table.insert(&columnname, json_column)?;
+            let _answ2 = json_tables.insert(&tablename, json_table)?;
+        } else {
+            return Err(JsonError::WrongType("Couldn't lock table!".to_string()));
         }
-        let _answ2 = json_tables.insert(&tablename, json_table)?;
+        
     }
     let file = fs::File::create(neith.path);
     let fin = json_tables.write(&mut file.unwrap());

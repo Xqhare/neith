@@ -1,4 +1,4 @@
-use std::{io::{self, Error}, path::{Path, PathBuf}, time::Instant};
+use std::{io::{self, Error}, path::{Path, PathBuf}, time::Instant, sync::{Mutex, MutexGuard}, rc::Rc};
 
 use chrono;
 
@@ -23,19 +23,21 @@ use jisard::read_json_from_neithdb_file;
 use utils::jisard::write_neithdb_file;
 use success::Success;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Neith {
     path: PathBuf,
     ram_mode: bool,
     job_history: bool,
     job_history_table_index: Option<usize>,
-    tables: Vec<Table>,
+    // putting tables on the heap, as they could grow quite large! Pointing to it also makes sense,
+    // along being needed for clone.
+    tables: Vec<Box<Rc<Mutex<Table>>>>,
     split_pattern: String,
 }
 
 impl Default for Neith {
     fn default() -> Self {
-        let tables: Vec<Table> = Vec::new();
+        let tables: Vec<Box<Rc<Mutex<Table>>>> = Default::default();
         let ram_mode = true;
         let job_history = false;
         let job_history_table_index = None;
@@ -50,13 +52,13 @@ impl From<PathBuf> for Neith {
     fn from(value: PathBuf) -> Self {
         let path = canonize_path(value);
         let read_file = read_json_from_neithdb_file(path.clone());
-        let mut tables: Vec<Table> = Vec::new();
+        let mut tables: Vec<Box<Rc<Mutex<Table>>>> = Default::default();
         let ram_mode = false;
         let job_history = false;
         let job_history_table_index = None;
         let split_pattern = ",+".to_string();
         for table in read_file.entries() {
-            let table = Table::from(table);
+            let table = Box::new(Rc::new(Mutex::new(Table::from(table))));
             tables.push(table);
         }
         return Neith{ tables, path, ram_mode, job_history, job_history_table_index, split_pattern};
@@ -68,7 +70,7 @@ impl Neith {
     /// For general use, `connect(filename)` is highly recommended.
     pub fn new(value: PathBuf, ram_mode: bool, job_history: bool) -> Self {
         let path = canonize_path(value);
-        let tables: Vec<Table> = Vec::new();
+        let tables: Vec<Box<Rc<Mutex<Table>>>> = Default::default();
         let job_history_table_index = None;
         let split_pattern = ",+".to_string();
         return Neith{ tables, path, ram_mode, job_history, job_history_table_index, split_pattern};
@@ -95,21 +97,21 @@ impl Neith {
         return connection;
     }
     /// A toggle for job-history, set to true to record, set to false to not record.
-    pub fn set_job_history(&mut self, value: bool) -> Success {
+    pub fn set_job_history(&mut self, value: bool) -> Result<Success, Error> {
         self.job_history = value;
-        if self.exists_table("job_history".to_string()) && self.job_history {
+        if self.exists_table("job_history".to_string())? && self.job_history {
             let index = self.search_for_table("job_history".to_string()).unwrap();
             self.job_history_table_index = Some(index);
-            return Success::SuccessMessage(value);
-        } else if !self.exists_table("job_history".to_string()) && self.job_history {
+            return Ok(Success::SuccessMessage(value));
+        } else if !self.exists_table("job_history".to_string())? && self.job_history {
             let table_columns: Vec<(String, bool)> = vec![("id".to_string(), true), ("command".to_string(), false), ("time".to_string(), false), ("duration".to_string(), false)];
             let table_prop = ("job_history".to_string(), table_columns);
-            let job_history_table = Table::from(table_prop);
+            let job_history_table = Box::new(Rc::new(Mutex::new(Table::from(table_prop))));
             self.tables.push(job_history_table);
             // Table len == number of elements. element 1 == index 0
             self.job_history_table_index = Some(self.tables.len().saturating_sub(1));
         }
-        return Success::SuccessMessage(value);
+        return Ok(Success::SuccessMessage(value));
     }
     pub fn set_marker(&mut self, split_pattern: &str) {
         self.split_pattern = split_pattern.to_string();
@@ -177,10 +179,13 @@ impl Neith {
                                 return Ok(Success::SuccessMessage(true));
                             }
                             let columns = decode_columnmaker(command_lvl4.1).unwrap();
-                            let answ = Table::from((tablename, columns));
+                            let answ = Box::new(Rc::new(Mutex::new(Table::from((tablename, columns)))));
                             self.tables.push(answ);
                             if self.job_history {
-                                let _ = self.write_history(binding, date, start)?;
+                                let history_table = self.tables[self.job_history_table_index.unwrap()].lock();
+                                if history_table.is_ok() {
+                                    let _ = self.write_history(binding, date, start, history_table.unwrap())?;
+                                }
                             }
                             // Successful decoding of syntax!
                             return Ok(Success::SuccessMessage(true));
@@ -193,15 +198,24 @@ impl Neith {
                         if command_lvl4.0.as_str().contains("with") {
                             let columns = decode_columnmaker(command_lvl4.1).unwrap();
                             let table_index = self.search_for_table(tablename)?;
-                            let answ = self.tables[table_index].new_columns(columns);
-                            if self.job_history {
-                                let _ = self.write_history(binding, date, start)?;
-                            }
-                            // Successful decoding of syntax!
-                            if answ == Success::SuccessMessage(true) {
-                                return Ok(answ);
+                            let table = self.tables[table_index].lock();
+                            if table.is_ok() {
+                                let mut ok_table = table.unwrap();
+                                let answ = ok_table.new_columns(columns);
+                                // Successful decoding of syntax!
+                                if answ == Success::SuccessMessage(true) {
+                                    if self.job_history {
+                                        let history_table = self.tables[self.job_history_table_index.unwrap()].lock();
+                                        if history_table.is_ok() {
+                                            let _ = self.write_history(binding, date, start, history_table.unwrap())?;
+                                        }
+                                    }
+                                    return Ok(answ);
+                                } else {
+                                    return Err(Error::other("Invalid nql syntax."));
+                                }
                             } else {
-                                return Err(Error::other("Invalid nql syntax."));
+                                return Err(Error::other("Couldn't lock Table! Aborting task, no data changed!"));
                             }
                         } else {
                             return Err(Error::other("Invalid nql syntax."));
@@ -211,15 +225,25 @@ impl Neith {
                         let command_lvl4 = command_lvl3.1;
                         let decoded = decode_list_columndata(command_lvl4, self.split_pattern.clone());
                         let table_index = self.search_for_table(tablename)?;
-                        let answ = self.tables[table_index].new_data(decoded)?;
-                        if self.job_history {
-                            let _ = self.write_history(binding, date, start)?;
-                        }
-                        if answ == Success::SuccessMessage(true) {
-                            return Ok(answ);
-                        } else {
-                            return Err(Error::other("Invalid nql syntax."));
-                        }
+                        let table = self.tables[table_index].lock();
+                            if table.is_ok() {
+                                let mut ok_table = table.unwrap();
+                                let answ = ok_table.new_data(decoded)?;
+                                // Successful decoding of syntax!
+                                if answ == Success::SuccessMessage(true) {
+                                    if self.job_history {
+                                        let history_table = self.tables[self.job_history_table_index.unwrap()].lock();
+                                        if history_table.is_ok() {
+                                            let _ = self.write_history(binding, date, start, history_table.unwrap())?;
+                                        }
+                                    }
+                                    return Ok(answ);
+                                } else {
+                                    return Err(Error::other("Invalid nql syntax."));
+                                }
+                            } else {
+                                return Err(Error::other("Couldn't lock Table! Aborting task, no data changed!"));
+                            }
 
                     },
                     _ => return Err(Error::other("Invalid nql syntax.")),
@@ -235,7 +259,10 @@ impl Neith {
                             let answ = self.delete_table(tablename);
                             if answ.is_ok() {
                                 if self.job_history {
-                                    let _ = self.write_history(binding, date, start)?;
+                                    let history_table = self.tables[self.job_history_table_index.unwrap()].lock();
+                                    if history_table.is_ok() {
+                                        let _ = self.write_history(binding, date, start, history_table.unwrap())?;
+                                    }
                                 }
                                 return Ok(answ.unwrap());
                             } else {
@@ -256,7 +283,10 @@ impl Neith {
                                 let answ = self.delete_column(tablename, columnname);
                                 if answ.is_ok() {
                                     if self.job_history {
-                                        let _ = self.write_history(binding, date, start)?;
+                                        let history_table = self.tables[self.job_history_table_index.unwrap()].lock();
+                                        if history_table.is_ok() {
+                                            let _ = self.write_history(binding, date, start, history_table.unwrap())?;
+                                        }
                                     }
                                     return Ok(answ.unwrap());
                                 } else {
@@ -279,14 +309,24 @@ impl Neith {
                             if command_lvl5.0.as_str().contains("where"){
                                 let conditions = command_lvl5.1;
                                 let finished_search = self.search_conditionals(conditions, table_index)?;
-                                let answ = self.tables[table_index].delete_data(finished_search);
-                                if answ.is_ok() {
-                                    if self.job_history {
-                                        let _ = self.write_history(binding, date, start)?;
+                                let table = self.tables[table_index].lock();
+                                if table.is_ok() {
+                                    let mut ok_table = table.unwrap();
+                                    let answ = ok_table.delete_data(finished_search)?;
+                                    // Successful decoding of syntax!
+                                    if answ == Success::SuccessMessage(true) {
+                                        if self.job_history {
+                                            let history_table = self.tables[self.job_history_table_index.unwrap()].lock();
+                                            if history_table.is_ok() {
+                                                let _ = self.write_history(binding, date, start, history_table.unwrap())?;
+                                            }
+                                        }
+                                    return Ok(answ);
+                                    } else {
+                                        return Err(Error::other("Invalid nql syntax."));
                                     }
-                                    return Ok(answ.unwrap());
                                 } else {
-                                    return Err(Error::other("Invalid nql syntax."));
+                                    return Err(Error::other("Couldn't lock Table! Aborting task, no data changed!"));
                                 }
                             } else {
                                 return Err(Error::other("Invalid nql syntax."));
@@ -310,14 +350,25 @@ impl Neith {
                         let decoded_list = decode_list_columndata(command_lvl5.1, self.split_pattern.clone());
                         let table_index = self.search_for_table(tablename)?;
                         let search = self.search_conditionals(conditions, table_index)?;
-                        let answ = self.tables[table_index].update_data(decoded_list, search)?;
-                        if self.job_history {
-                            let _ = self.write_history(binding, date, start)?;
-                        }
-                        match answ {
-                            Success::SuccessMessage(true) => return Ok(answ),
-                            _ => return Err(Error::other(format!("Invalid nql syntax."))),
-                        }
+                        let table = self.tables[table_index].lock();
+                            if table.is_ok() {
+                                let mut ok_table = table.unwrap();
+                                let answ = ok_table.update_data(decoded_list, search)?;
+                                // Successful decoding of syntax!
+                                if answ == Success::SuccessMessage(true) {
+                                    if self.job_history {
+                                        let history_table = self.tables[self.job_history_table_index.unwrap()].lock();
+                                        if history_table.is_ok() {
+                                            let _ = self.write_history(binding, date, start, history_table.unwrap())?;
+                                        }
+                                    }
+                                    return Ok(answ);
+                                } else {
+                                    return Err(Error::other("Invalid nql syntax."));
+                                }
+                            } else {
+                                return Err(Error::other("Couldn't lock Table! Aborting task, no data changed!"));
+                            }
                     } else {
                         return Err(Error::other(format!("Invalid nql syntax. {:?} should be 'where'.", command_lvl3.0)));
                     }
@@ -332,30 +383,67 @@ impl Neith {
                     let command_lvl4 = strip_leading_word(command_lvl3.1);
                     let tablename = command_lvl4.0;
                     let table_index = self.search_for_table(tablename)?;
-                    let decoded_column_list: Vec<String> = decode_column_list(command_lvl2.0.clone(), self.tables[table_index].clone());
+                    let new_tmp_table = {
+                        let tmp = self.tables[table_index].lock();
+                        if tmp.is_ok() {
+                            tmp.unwrap().clone()
+                        } else {
+                            return Err(Error::other("Couldn't lock table!"));
+                        }
+                    };
+                    let decoded_column_list: Vec<String> = decode_column_list(command_lvl2.0.clone(), new_tmp_table);
                     let command_lvl5 = strip_leading_word(command_lvl4.1);
                     if command_lvl2.0.as_str().contains("*") && binding.split_whitespace().count() == 4 {
-                        let search = self.select_all_rows(table_index);
-                        let answ = self.tables[table_index].clone().select_data(decoded_column_list, search);
-                        if self.job_history {
-                            let _ = self.write_history(binding, date, start)?;
-                        }
-                        return Ok(answ);
+                        let search = self.select_all_rows(table_index)?;
+                        let table = self.tables[table_index].lock();
+                            if table.is_ok() {
+                                let ok_table = table.unwrap();
+                                let answ = ok_table.select_data(decoded_column_list, search);
+                                // Successful decoding of syntax!
+                                if self.job_history {
+                                    let history_table = self.tables[self.job_history_table_index.unwrap()].lock();
+                                    if history_table.is_ok() {
+                                        let _ = self.write_history(binding, date, start, history_table.unwrap())?;
+                                    }
+                                }
+                                return Ok(answ); 
+                            } else {
+                                return Err(Error::other("Couldn't lock Table! Aborting task, no data changed!"));
+                            }
                     } else if !binding.contains("where") {
-                        let search = self.select_all_rows(table_index);
-                        let answ = self.tables[table_index].select_data(decoded_column_list, search);
-                        if self.job_history {
-                            let _ = self.write_history(binding, date, start)?;
-                        }
-                        return Ok(answ);
+                        let search = self.select_all_rows(table_index)?;
+                        let table = self.tables[table_index].lock();
+                            if table.is_ok() {
+                                let ok_table = table.unwrap();
+                                let answ = ok_table.select_data(decoded_column_list, search);
+                                if self.job_history {
+                                    let history_table = self.tables[self.job_history_table_index.unwrap()].lock();
+                                    if history_table.is_ok() {
+                                        let _ = self.write_history(binding, date, start, history_table.unwrap())?;
+                                    }
+                                }
+                                return Ok(answ);
+                            } else {
+                                return Err(Error::other("Couldn't lock Table! Aborting task, no data changed!"));
+                            }
                     } else if command_lvl5.0.as_str().contains("where") {
                         let conditions = command_lvl5.1;
                         let search = self.search_conditionals(conditions.clone(), table_index)?;
-                        let answ = self.tables[table_index].clone().select_data(decoded_column_list, search);
-                        if self.job_history {
-                            let _ = self.write_history(binding, date, start)?;
-                        }
-                        return Ok(answ);
+                        let table = self.tables[table_index].lock();
+                            if table.is_ok() {
+                                let ok_table = table.unwrap();
+                                let answ = ok_table.select_data(decoded_column_list, search);
+                                // Successful decoding of syntax!
+                                if self.job_history {
+                                    let history_table = self.tables[self.job_history_table_index.unwrap()].lock();
+                                    if history_table.is_ok() {
+                                        let _ = self.write_history(binding, date, start, history_table.unwrap())?;
+                                    }
+                                }
+                                return Ok(answ);                           
+                            } else {
+                                return Err(Error::other("Couldn't lock Table! Aborting task, no data changed!"));
+                            }
                     } else {
                         return Err(Error::other(format!("Invalid nql syntax. {:?} should be 'where'", command_lvl5.1)));
                     }
@@ -375,12 +463,22 @@ impl Neith {
                             if command_lvl5.0.as_str().contains("from") {
                                 let tablename = command_lvl5.1;
                                 let table_index = self.search_for_table(tablename)?;
-                                let column_index = self.tables[table_index].search_for_column(columnname)?;
-                                let answ = self.tables[table_index].columns[column_index].min();
-                                if self.job_history {
-                                    let _ = self.write_history(binding, date, start)?;
+                                let table = self.tables[table_index].lock();
+                                if table.is_ok() {
+                                    let ok_table = table.unwrap();
+                                    let column_index = ok_table.search_for_column(columnname)?;
+                                    let answ = ok_table.columns[column_index].min();
+                                    // Successful decoding of syntax!
+                                    if self.job_history {
+                                        let history_table = self.tables[self.job_history_table_index.unwrap()].lock();
+                                        if history_table.is_ok() {
+                                            let _ = self.write_history(binding, date, start, history_table.unwrap())?;
+                                        }
+                                    }
+                                    return Ok(answ);
+                                }  else {
+                                    return Err(Error::other("Couldn't lock Table! Aborting task, no data changed!"));
                                 }
-                                return Ok(answ);
                             } else {
                                 return Err(Error::other(format!("Invalid nql syntax. {:?} should be one 'from'", command_lvl5.0)));
                             }
@@ -398,12 +496,22 @@ impl Neith {
                             if command_lvl5.0.as_str().contains("from") {
                                 let tablename = command_lvl5.1;
                                 let table_index = self.search_for_table(tablename)?;
-                                let column_index = self.tables[table_index].search_for_column(columnname)?;
-                                let answ = self.tables[table_index].columns[column_index].max();
-                                if self.job_history {
-                                    let _ = self.write_history(binding, date, start)?;
+                                let table = self.tables[table_index].lock();
+                                if table.is_ok() {
+                                    let ok_table = table.unwrap();
+                                    let column_index = ok_table.search_for_column(columnname)?;
+                                    let answ = ok_table.columns[column_index].max();
+                                    // Successful decoding of syntax!
+                                    if self.job_history {
+                                        let history_table = self.tables[self.job_history_table_index.unwrap()].lock();
+                                        if history_table.is_ok() {
+                                            let _ = self.write_history(binding, date, start, history_table.unwrap())?;
+                                        }
+                                    }
+                                    return Ok(answ);
+                                } else {
+                                    return Err(Error::other("Couldn't lock Table! Aborting task, no data changed!"));
                                 }
-                                return Ok(answ);
                             } else {
                                 return Err(Error::other(format!("Invalid nql syntax. {:?} should be one 'from'", command_lvl5.0)));
                             }
@@ -417,14 +525,20 @@ impl Neith {
                             let command_lvl4 = strip_leading_word(command_lvl3.1);
                             let tablename = command_lvl4.0;
                             let table_index = self.search_for_table(tablename)?;
-                            let answ = self.tables[table_index].len();
-                            // This is stupid and I love it!
-                            let temp_str = answ.to_string();
-                            let encoded_data = vec![Data::from(temp_str, self.split_pattern.clone())];
-                            if self.job_history {
-                                let _ = self.write_history(binding, date, start)?;
+                            let table = self.tables[table_index].lock();
+                            if table.is_ok() {
+                                let ok_table = table.unwrap();
+                                let answ = ok_table.len();
+                                if self.job_history {
+                                    let history_table = self.tables[self.job_history_table_index.unwrap()].lock();
+                                    if history_table.is_ok() {
+                                        let _ = self.write_history(binding, date, start, history_table.unwrap())?;
+                                    }
+                                }
+                                return Ok(Success::Result(vec![Data::from(answ.to_string(), self.split_pattern.clone())]));
+                            } else {
+                                return Err(Error::other("Couldn't lock Table! Aborting task, no data changed!"));
                             }
-                            return Ok(Success::Result(encoded_data));
                         } else {
                             return Err(Error::other(format!("Invalid nql syntax. {:?} should be one 'of'", command_lvl3.0)));
                         }
@@ -440,31 +554,42 @@ impl Neith {
             },
         }
     }
-    fn write_history(&mut self, binding: String, date: String, start: Instant) -> Result<(), Error> {
+    fn write_history(&self, binding: String, date: String, start: Instant, table: MutexGuard<Table>) -> Result<(), Error> {
         // I use length => no need to add +1, len does that by
         // itself.
-        let id = self.tables[self.job_history_table_index.unwrap()].len().to_string();
+        let mut ok_table = table;
+        let id = ok_table.len().to_string();
         let duration = start.elapsed().as_micros().to_string();
         let sp = &self.split_pattern;
         let decoded = decode_list_columndata(format!("(id = {id}{sp} command = {binding}{sp} time = {date}{sp} duration = {duration})"), self.split_pattern.clone());
-        let _ = &self.update_history(decoded)?;
+        let _ = ok_table.new_data(decoded);
         return Ok(());
+        
     }
     /// Check if a table exists. returns `true` if it is found, `false` otherwise.
-    pub fn exists_table(&self, name: String) -> bool {
+    pub fn exists_table(&self, name: String) -> Result<bool, Error> {
         for table in &self.tables {
-            if table.name == name {
-                return true;
+            let temp = table.lock();
+            if temp.is_ok() {
+                let ok_store = temp.unwrap();
+                if ok_store.name == name {
+                    return Ok(true);
+                }
+            } else {
+                return Err(Error::other("Couldn't lock table!"));
             }
         }
-        return false;
+        return Ok(false);
     }
-    fn select_all_rows(&self, table_index: usize) -> Vec<usize> {
-        let out = &self.tables[table_index].select_all_rows();
-        return out.to_vec();
-    }
-    fn update_history(&mut self, decoded: Vec<(String, Data)>) -> Result<Success, Error> {
-        return self.tables[self.job_history_table_index.unwrap()].new_data(decoded);
+    fn select_all_rows(&self, table_index: usize) -> Result<Vec<usize>, Error> {
+        let table = self.tables[table_index].lock();
+        if table.is_ok() {
+            let ok_table = table.unwrap();
+            let out = ok_table.select_all_rows();
+            return Ok(out.to_vec());
+        } else {
+            return Err(Error::other("Couldn't lock table!"));
+        }
     }
     fn search_conditionals(&self, conditions: String, table_index: usize) -> Result<Vec<usize>, Error> {
         let decoded_conditions = decode_list_conditions(conditions, self.split_pattern.clone())?;
@@ -483,9 +608,15 @@ impl Neith {
             if data_query.is_some() {
                 let name = &data_query.unwrap().0;
                 let data = &data_query.unwrap().1;
-                let search = self.tables[table_index].search_column_data(name.to_string(), data.clone())?;
-                // as there is no other elements, no need for push, just set:
-                found_data = search;
+                let table = self.tables[table_index].lock();
+                if table.is_ok() {
+                    let ok_table = table.unwrap();
+                    let search = ok_table.search_column_data(name.to_string(), data.clone())?;
+                    // as there is no other elements, no need for push, just set:
+                    found_data = search;
+                } else {
+                    return Err(Error::other("Couldn't lock table!"));
+                }
             } else {
                 return Err(Error::other(format!("Invalid nql syntax: {:?} = should be a column name and data", encoded_conditions[0])));
             }
@@ -498,11 +629,17 @@ impl Neith {
             let other_query = &encoded_conditions[2];
             let other_name = &other_query.0;
             let other_data = &other_query.1;
-            let search = self.tables[table_index].search_column_data(name.to_string(), data.clone())?;
-            let other_search = self.tables[table_index].search_column_data(other_name.to_string(), other_data.clone())?;
-            let condition_check = condition_check(search, condition.to_string(), other_search)?;
-            // as there is no other elements, no need for push, just set:
-            found_data = condition_check;
+            let table = self.tables[table_index].lock();
+            if table.is_ok() {
+                let ok_table = table.unwrap();
+                let search = ok_table.search_column_data(name.to_string(), data.clone())?;
+                let other_search = ok_table.search_column_data(other_name.to_string(), other_data.clone())?;
+                let condition_check = condition_check(search, condition.to_string(), other_search)?;
+                // as there is no other elements, no need for push, just set:
+                found_data = condition_check;
+            } else {
+                return Err(Error::other("Couldn't lock table!"));
+            }
         } else if encoded_conditions.len() > 3 {
             // fn tbd(input: Vec<(String, Data)>) -> Vec<(usize, Data)>
             let data_query = encoded_conditions.remove(0);
@@ -514,32 +651,42 @@ impl Neith {
             let other_query = encoded_conditions.remove(0);
             let other_name = other_query.0;
             let other_data = other_query.1;
-            let search = self.tables[table_index].search_column_data(name, data)?;
-            let other_search = self.tables[table_index].search_column_data(other_name, other_data)?;
-            let mut temp_hit_files: Vec<usize>;
-            temp_hit_files = condition_check(search, condition, other_search)?;
-            let mut read_condition = String::new();
-            for entry in encoded_conditions {
-                if entry.1 == Data::default() {
-                    // Has to be a conditional
-                    read_condition = entry.0;
-                } else {
-                    let diff_name = entry.0;
-                    let diff_data = entry.1;
-                    let diff_search = self.tables[table_index].search_column_data(diff_name, diff_data)?;
-                    temp_hit_files = condition_check(temp_hit_files, read_condition.clone(), diff_search)?;
+            let table = self.tables[table_index].lock();
+            if table.is_ok() {
+                let ok_table = table.unwrap();
+                let search = ok_table.search_column_data(name, data)?;
+                let other_search = ok_table.search_column_data(other_name, other_data)?;
+                let mut temp_hit_files: Vec<usize>;
+                temp_hit_files = condition_check(search, condition, other_search)?;
+                let mut read_condition = String::new();
+                for entry in encoded_conditions {
+                    if entry.1 == Data::default() {
+                        // Has to be a conditional
+                        read_condition = entry.0;
+                    } else {
+                        let diff_name = entry.0;
+                        let diff_data = entry.1;
+                        let diff_search = ok_table.search_column_data(diff_name, diff_data)?;
+                        temp_hit_files = condition_check(temp_hit_files, read_condition.clone(), diff_search)?;
+                    }
                 }
+                // As the code above ended up exhaustive, again just set:
+                found_data = temp_hit_files;
+            } else {
+                return Err(Error::other("Couldn't lock table!"));
             }
-            // As the code above ended up exhaustive, again just set:
-            found_data = temp_hit_files;
         }
         return Ok(found_data);
     }
     fn search_for_table(&self, tablename: String) -> Result<usize, Error> {
         let mut counter: usize = 0;
         for entry in &self.tables {
-            if entry.name.eq(&tablename) {
-                return Ok(counter);
+            let table = entry.lock();
+            if table.is_ok() {
+                let ok_table = table.unwrap();
+                if ok_table.name.eq(&tablename) {
+                    return Ok(counter);
+                }
             }
             counter += 1;
         }
@@ -551,11 +698,17 @@ impl Neith {
     }
     fn delete_column(&mut self, tablename: String, columnname: String) -> Result<Success, Error> {
         let table_index = self.search_for_table(tablename)?;
-        let answ = self.tables[table_index].delete_column(columnname)?;
-        if answ == Success::SuccessMessage(true) {
-            return Ok(Success::SuccessMessage(true));
+        let table = self.tables[table_index].lock();
+        if table.is_ok() {
+            let mut ok_table = table.unwrap();
+            let answ = ok_table.delete_column(columnname)?;
+            if answ == Success::SuccessMessage(true) {
+                return Ok(Success::SuccessMessage(true));
+            } else {
+                return Err(Error::other("Deletion error!"));
+            }
         } else {
-            return Err(Error::other("Deletion error!"));
+            return Err(Error::other("Couldn't lock table!"));
         }
     }
 }

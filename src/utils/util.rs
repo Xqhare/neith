@@ -137,7 +137,7 @@ pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Vec<(S
     } else {
         clean_in = clean_in.trim_end_matches(")").to_string();
     }
-    let split = clean_in.split(split_pattern.as_str());
+    let split = clean_in.split(&split_pattern);
     let mut list_check = false;
     for entry in split {
         if entry.contains("(") {
@@ -145,10 +145,10 @@ pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Vec<(S
         }
         if list_check {
             list_check = false;
-            let new = decode_single_columndata(entry, split_pattern);
+            let new = decode_single_columndata(entry, &split_pattern);
             out.push(new);
         } else {
-            let new = decode_single_columndata(entry, split_pattern);
+            let new = decode_single_columndata(entry, &split_pattern);
             out.push(new);
         }
     }
@@ -160,7 +160,7 @@ pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Vec<(S
 ///
 /// ## Returns
 /// A touple of `(String, Data)` where `String` is the column name and `Data` is the data.
-pub fn decode_single_columndata(single_val: &str, split_pattern: String) -> (String, Data) {
+pub fn decode_single_columndata(single_val: &str, split_pattern: &str) -> (String, Data) {
     // I get: "columnname = data"
     let mut cleaned_input = single_val.replacen("=", "", 1);
     if cleaned_input.contains("]") {
@@ -169,7 +169,7 @@ pub fn decode_single_columndata(single_val: &str, split_pattern: String) -> (Str
     }
     let split_input = cleaned_input.split_whitespace();
     let name = split_input.clone().take(1).collect::<String>();
-    let data = Data::from(split_input.skip(1).map(|d| format!("{} ", d)).collect::<String>().trim_end().to_string(), split_pattern);
+    let data = Data::from(split_input.skip(1).map(|d| format!("{} ", d)).collect::<String>().trim_end().to_string(), split_pattern.to_string());
     return (name, data);
 }
 
@@ -222,7 +222,7 @@ pub fn encode_list_conditions(value: Vec<String>, split_pattern: String) -> Resu
             cleaned_thing = temp;
         }
         if cleaned_thing.contains(" = ") {
-            let decode_columndata = decode_single_columndata(&cleaned_thing, split_pattern);
+            let decode_columndata = decode_single_columndata(&cleaned_thing, &split_pattern);
             let name = decode_columndata.0;
             let data = decode_columndata.1;
             encoding_list.push((name, data));
