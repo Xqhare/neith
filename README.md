@@ -26,6 +26,15 @@ Please note that the more columns a table has, performance is impacted too. Howe
 
 Having said all this, Neith gives the perfect excuse for a bad performing program, as everyone knows that it's always the database's fault!
 
+## Features
+
+- small
+- reasonably fast
+- '.neithdb' is just '.json' making moving databases feasable
+- lovingly handcrafted, no AI code!
+- now with the v2 backend! And as 2 is twice as big as 1, it clearly is faster by the same factor!
+- minimal dependencies (2 to be precise, chrono for timekeeping and json for json stuff)
+
 ## Design and philosophy of Neith
 
 > [!IMPORTANT]
