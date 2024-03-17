@@ -168,9 +168,9 @@ Nql is a very simple sql and mysql inspired syntax for interacting with Neith.
 
 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 
 | - | - | - | - | - | - | - | 
-| execute( | new | table / column / data | 'tablename' | with / with / ('other_columnname' = 'new_data',+ 'different_column' = '(list, of, data, in, parenthesis)',+ ...)!) | ('columnname' 'unique', ...)!) / ('columnname' 'unique', ...)!)
+| execute( | new | table / column / data | 'tablename' | with / with / ('other_columnname' = 'new_data',+ 'different_column' = '(list,+ of,+ data,+ in,+ parenthesis)',+ ...)!) | ('columnname' 'unique', ...)!) / ('columnname' 'unique', ...)!)
 | execute( | delete | table / column / data | with / with / in | 'tablename'!) / 'columnname' / 'tablename' | in / where | 'tablename'!) / ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = 'other data',+ ...]!) |
-| execute( | update | 'tablename' | where | ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = '(other, data, as, list)',+ ...] | with | ('other_columnname' = 'new_data',+ 'different_column' = '(list, of, data, in, parenthesis)',+ ...)!) | 
+| execute( | update | 'tablename' | where | ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = '(other, data, as, list)',+ ...] | with | ('other_columnname' = 'new_data',+ 'different_column' = '(list,+ of,+ data,+ in,+ parenthesis)',+ ...)!) | 
 | execute( | select | (columnname0, columnname1, ...)  OR * | from | 'tablename' | where | ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = 'other data',+ ...]!) |
 | execute( | get | min / max / len | in / in / of |  'columnname' / 'columnname' / 'tablename'!) | from / from | 'tablename'!) / 'tablename'!) |
 
