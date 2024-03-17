@@ -34,6 +34,14 @@ Having said all this, Neith gives the perfect excuse for a bad performing progra
 - lovingly handcrafted, no AI code!
 - now with the v2 backend! And as 2 is twice as big as 1, it clearly is faster by the same factor!
 - minimal dependencies (2 to be precise, chrono for timekeeping and json for json stuff)
+- ram-mode, where absolutely nothing is written to disk
+- toggleable history table of all interactions with Neith
+- All CRUD operations
+- Logical chaining of conditions
+- ACID compliance
+- uses its own sql-like query langauge, Nql or NeithQueryLanguage
+- convenience functions for the max, min entry of a column and length of a table!
+- surprisingly Neith does not require that much more code than most other db implementations
 
 ## Design and philosophy of Neith
 
