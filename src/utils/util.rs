@@ -145,10 +145,10 @@ pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Vec<(S
         }
         if list_check {
             list_check = false;
-            let new = decode_single_columndata(entry);
+            let new = decode_single_columndata(entry, split_pattern);
             out.push(new);
         } else {
-            let new = decode_single_columndata(entry);
+            let new = decode_single_columndata(entry, split_pattern);
             out.push(new);
         }
     }
@@ -160,7 +160,7 @@ pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Vec<(S
 ///
 /// ## Returns
 /// A touple of `(String, Data)` where `String` is the column name and `Data` is the data.
-pub fn decode_single_columndata(single_val: &str) -> (String, Data) {
+pub fn decode_single_columndata(single_val: &str, split_pattern: String) -> (String, Data) {
     // I get: "columnname = data"
     let mut cleaned_input = single_val.replacen("=", "", 1);
     if cleaned_input.contains("]") {
@@ -169,7 +169,7 @@ pub fn decode_single_columndata(single_val: &str) -> (String, Data) {
     }
     let split_input = cleaned_input.split_whitespace();
     let name = split_input.clone().take(1).collect::<String>();
-    let data = Data::from(split_input.skip(1).map(|d| format!("{} ", d)).collect::<String>().trim_end().to_string());
+    let data = Data::from(split_input.skip(1).map(|d| format!("{} ", d)).collect::<String>().trim_end().to_string(), split_pattern);
     return (name, data);
 }
 
@@ -210,7 +210,7 @@ pub fn decode_list_conditions(value: String, split_pattern: String) -> Result<Ve
 ///
 /// ## Errors
 /// If supplied with invalid nql.
-pub fn encode_list_conditions(value: Vec<String>) -> Result<Vec<(String, Data)>, Error> {
+pub fn encode_list_conditions(value: Vec<String>, split_pattern: String) -> Result<Vec<(String, Data)>, Error> {
     let mut encoding_list: Vec<(String, Data)> = Vec::new();
     for thing in &value {
         let mut cleaned_thing = thing.to_owned();
@@ -222,7 +222,7 @@ pub fn encode_list_conditions(value: Vec<String>) -> Result<Vec<(String, Data)>,
             cleaned_thing = temp;
         }
         if cleaned_thing.contains(" = ") {
-            let decode_columndata = decode_single_columndata(&cleaned_thing);
+            let decode_columndata = decode_single_columndata(&cleaned_thing, split_pattern);
             let name = decode_columndata.0;
             let data = decode_columndata.1;
             encoding_list.push((name, data));

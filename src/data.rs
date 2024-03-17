@@ -18,8 +18,8 @@ impl Default for Data {
     }
 }
 
-impl From<String> for Data {
-    fn from(value: String) -> Self {
+impl Data {
+    pub fn from(value: String, split_pattern: String) -> Self {
         let bool_test = value.parse::<bool>();
         if bool_test.is_ok() {
             return Data::Bool(bool_test.unwrap());
@@ -31,7 +31,7 @@ impl From<String> for Data {
         // (1, 10.1, true, test)
         if value.starts_with("(") && value.ends_with(")") {
             let temp_val = value.replace("(", "").replace(")", "");
-            let split = temp_val.split(",");
+            let split = temp_val.split(&split_pattern);
             let mut out: Vec<Data> = Vec::new();
             for entry in split {
                 let data = self::Data::from_single_for_list(entry.trim_start().to_string());
@@ -43,9 +43,6 @@ impl From<String> for Data {
         }
 
     }
-}
-
-impl Data {
     pub fn is_null(&self) -> bool {
         match self {
             Self::Null() => true,

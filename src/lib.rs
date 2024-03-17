@@ -420,7 +420,7 @@ impl Neith {
                             let answ = self.tables[table_index].len();
                             // This is stupid and I love it!
                             let temp_str = answ.to_string();
-                            let encoded_data = vec![Data::from(temp_str)];
+                            let encoded_data = vec![Data::from(temp_str, self.split_pattern.clone())];
                             if self.job_history {
                                 let _ = self.write_history(binding, date, start)?;
                             }
@@ -468,7 +468,7 @@ impl Neith {
     }
     fn search_conditionals(&self, conditions: String, table_index: usize) -> Result<Vec<usize>, Error> {
         let decoded_conditions = decode_list_conditions(conditions, self.split_pattern.clone())?;
-        let mut encoded_conditions = encode_list_conditions(decoded_conditions)?;
+        let mut encoded_conditions = encode_list_conditions(decoded_conditions, self.split_pattern.clone())?;
         let mut found_data: Vec<usize> = Vec::new();
 
         // Len can only be:
