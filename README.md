@@ -79,6 +79,11 @@ Neith does not save the state to disc automatically, and if used in `ram-mode` i
 
 Maybe I will implement a flag for automatic saving. This however is a [compute intensive operation](#saving-implementation), so it would probably default to `off` just like with the `job-history` table.
 
+### Backend V2
+
+Neith's backend has been rewritten with Atomicity and better performance in mind. To that end, tables are now protected by a 'Mutex<_>' and behind a reference. Tables are now also explicitly stored on the heap, improving the performance for larger datasets especially.
+While the goal of increased Atomicity has been achieved, performance could, as always, be improved further.
+
 ## Naming
 
 > [!NOTE]
