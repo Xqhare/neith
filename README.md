@@ -43,6 +43,11 @@ Having said all this, Neith gives the perfect excuse for a bad performing progra
 - convenience functions for the max, min entry of a column and length of a table!
 - surprisingly Neith does not require that much more code than most other db implementations
 
+## Roadmap
+
+- Add toggleable autosave to disk
+- Transform a ram-only database into a normal one, and save its contents
+
 ## Design and philosophy of Neith
 
 > [!IMPORTANT]
