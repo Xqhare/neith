@@ -27,6 +27,7 @@ use success::Success;
 pub struct Neith {
     path: PathBuf,
     ram_mode: bool,
+    autosave: bool,
     job_history: bool,
     job_history_table_index: Option<usize>,
     // putting tables on the heap, as they could grow quite large! Pointing to it also makes sense,
@@ -39,11 +40,12 @@ impl Default for Neith {
     fn default() -> Self {
         let tables: Vec<Box<Rc<Mutex<Table>>>> = Default::default();
         let ram_mode = true;
+        let autosave = false;
         let job_history = false;
         let job_history_table_index = None;
         let path = PathBuf::new();
         let split_pattern = ",+".to_string();
-        return Neith{ tables, path, ram_mode, job_history, job_history_table_index, split_pattern};
+        return Neith{ tables, path, ram_mode, autosave, job_history, job_history_table_index, split_pattern};
     }
     
 }
@@ -54,6 +56,7 @@ impl From<PathBuf> for Neith {
         let read_file = read_json_from_neithdb_file(path.clone());
         let mut tables: Vec<Box<Rc<Mutex<Table>>>> = Default::default();
         let ram_mode = false;
+        let autosave = false;
         let job_history = false;
         let job_history_table_index = None;
         let split_pattern = ",+".to_string();
@@ -61,7 +64,7 @@ impl From<PathBuf> for Neith {
             let table = Box::new(Rc::new(Mutex::new(Table::from(table))));
             tables.push(table);
         }
-        return Neith{ tables, path, ram_mode, job_history, job_history_table_index, split_pattern};
+        return Neith{ tables, path, ram_mode, autosave, job_history, job_history_table_index, split_pattern};
     }
 }
 
@@ -71,10 +74,12 @@ impl Neith {
     pub fn new(value: PathBuf, ram_mode: bool, job_history: bool) -> Self {
         let path = canonize_path(value);
         let tables: Vec<Box<Rc<Mutex<Table>>>> = Default::default();
+        let autosave = false;
         let job_history_table_index = None;
         let split_pattern = ",+".to_string();
-        return Neith{ tables, path, ram_mode, job_history, job_history_table_index, split_pattern};
+        return Neith{ tables, path, ram_mode, autosave, job_history, job_history_table_index, split_pattern};
     }
+
     /// Creates the connection to your database. Most if not all programs will start with this.
     /// ```
     /// use neith::Neith;
@@ -90,12 +95,14 @@ impl Neith {
             return connection;
         }
     }
+
     /// Connect in ram mode. No way to save even if you want to!
     pub fn connect_ram_mode(job_history: bool) -> Self {
         let mut connection = Neith::default();
         let _ = connection.set_job_history(job_history);
         return connection;
     }
+
     /// A toggle for job-history, set to true to record, set to false to not record.
     pub fn set_job_history(&mut self, value: bool) -> Result<Success, Error> {
         self.job_history = value;
@@ -113,13 +120,16 @@ impl Neith {
         }
         return Ok(Success::SuccessMessage(value));
     }
+
     pub fn set_marker(&mut self, split_pattern: &str) {
         self.split_pattern = split_pattern.to_string();
     }
+
     /// Saves the current state of the database to disc.
     pub fn save(self) -> Result<Success, json::JsonError> {
         return write_neithdb_file(self);
     }
+
     /// Makes Neith persistant and saves it's current state at the supplied Path. This path needs
     /// to be valid.
     ///
@@ -131,6 +141,20 @@ impl Neith {
         self.ram_mode = false;
         return self.clone().save();
     }
+
+    /// Activates the autosave feature to save after every interaction with Neith.
+    ///
+    /// ## Errors
+    /// Will error if ram mode is active.
+    pub fn set_autosave(&mut self, save: bool) -> Result<Success, Error> {
+        if self.ram_mode {
+            return Err(Error::other("Ram mode active! No saving possible!"));
+        } else {
+            self.autosave = save;
+            return Ok(Success::SuccessMessage(true));
+        }
+    }
+
     // This is the general apperance of a mk_table call.
     // mk_table(table_name, column_vec((column_name0, unique_bool, type)), (column_name1, unique_bool, type))
     //
@@ -187,6 +211,9 @@ impl Neith {
                             if self.search_for_table(tablename.clone()).is_ok() {
                                 // Table exists already; Don't do anything act like everything is
                                 // fine!
+                                if self.autosave && !self.ram_mode {
+                                    let _ = self.clone().save();
+                                }
                                 return Ok(Success::SuccessMessage(true));
                             }
                             let columns = decode_columnmaker(command_lvl4.1).unwrap();
@@ -199,6 +226,9 @@ impl Neith {
                                 }
                             }
                             // Successful decoding of syntax!
+                            if self.autosave && !self.ram_mode {
+                                let _ = self.clone().save();
+                            }
                             return Ok(Success::SuccessMessage(true));
                         } else {
                             return Err(Error::other("Invalid nql syntax."));
@@ -220,6 +250,9 @@ impl Neith {
                                         if history_table.is_ok() {
                                             let _ = self.write_history(binding, date, start, history_table.unwrap())?;
                                         }
+                                    }
+                                    if self.autosave && !self.ram_mode {
+                                        let _ = self.clone().save();
                                     }
                                     return Ok(answ);
                                 } else {
@@ -248,6 +281,9 @@ impl Neith {
                                             let _ = self.write_history(binding, date, start, history_table.unwrap())?;
                                         }
                                     }
+                                    if self.autosave && !self.ram_mode {
+                                        let _ = self.clone().save();
+                                    }
                                     return Ok(answ);
                                 } else {
                                     return Err(Error::other("Invalid nql syntax."));
@@ -275,6 +311,9 @@ impl Neith {
                                         let _ = self.write_history(binding, date, start, history_table.unwrap())?;
                                     }
                                 }
+                                if self.autosave && !self.ram_mode {
+                                    let _ = self.clone().save();
+                                }
                                 return Ok(answ.unwrap());
                             } else {
                                 return Err(Error::other("Invalid nql syntax."));
@@ -298,6 +337,9 @@ impl Neith {
                                         if history_table.is_ok() {
                                             let _ = self.write_history(binding, date, start, history_table.unwrap())?;
                                         }
+                                    }
+                                    if self.autosave && !self.ram_mode {
+                                        let _ = self.clone().save();
                                     }
                                     return Ok(answ.unwrap());
                                 } else {
@@ -332,7 +374,10 @@ impl Neith {
                                                 let _ = self.write_history(binding, date, start, history_table.unwrap())?;
                                             }
                                         }
-                                    return Ok(answ);
+                                        if self.autosave && !self.ram_mode {
+                                            let _ = self.clone().save();
+                                        }
+                                        return Ok(answ);
                                     } else {
                                         return Err(Error::other("Invalid nql syntax."));
                                     }
@@ -372,6 +417,9 @@ impl Neith {
                                         if history_table.is_ok() {
                                             let _ = self.write_history(binding, date, start, history_table.unwrap())?;
                                         }
+                                    }
+                                    if self.autosave && !self.ram_mode {
+                                        let _ = self.clone().save();
                                     }
                                     return Ok(answ);
                                 } else {
@@ -417,6 +465,9 @@ impl Neith {
                                         let _ = self.write_history(binding, date, start, history_table.unwrap())?;
                                     }
                                 }
+                                if self.autosave && !self.ram_mode {
+                                    let _ = self.clone().save();
+                                }
                                 return Ok(answ); 
                             } else {
                                 return Err(Error::other("Couldn't lock Table! Aborting task, no data changed!"));
@@ -432,6 +483,9 @@ impl Neith {
                                     if history_table.is_ok() {
                                         let _ = self.write_history(binding, date, start, history_table.unwrap())?;
                                     }
+                                }
+                                if self.autosave && !self.ram_mode {
+                                    let _ = self.clone().save();
                                 }
                                 return Ok(answ);
                             } else {
@@ -450,6 +504,9 @@ impl Neith {
                                     if history_table.is_ok() {
                                         let _ = self.write_history(binding, date, start, history_table.unwrap())?;
                                     }
+                                }
+                                if self.autosave && !self.ram_mode {
+                                    let _ = self.clone().save();
                                 }
                                 return Ok(answ);                           
                             } else {
@@ -486,6 +543,9 @@ impl Neith {
                                             let _ = self.write_history(binding, date, start, history_table.unwrap())?;
                                         }
                                     }
+                                    if self.autosave && !self.ram_mode {
+                                        let _ = self.clone().save();
+                                    }
                                     return Ok(answ);
                                 }  else {
                                     return Err(Error::other("Couldn't lock Table! Aborting task, no data changed!"));
@@ -519,6 +579,9 @@ impl Neith {
                                             let _ = self.write_history(binding, date, start, history_table.unwrap())?;
                                         }
                                     }
+                                    if self.autosave && !self.ram_mode {
+                                        let _ = self.clone().save();
+                                    }
                                     return Ok(answ);
                                 } else {
                                     return Err(Error::other("Couldn't lock Table! Aborting task, no data changed!"));
@@ -546,6 +609,9 @@ impl Neith {
                                         let _ = self.write_history(binding, date, start, history_table.unwrap())?;
                                     }
                                 }
+                                if self.autosave && !self.ram_mode {
+                                    let _ = self.clone().save();
+                                }
                                 return Ok(Success::Result(vec![Data::from(answ.to_string(), self.split_pattern.clone())]));
                             } else {
                                 return Err(Error::other("Couldn't lock Table! Aborting task, no data changed!"));
@@ -565,6 +631,7 @@ impl Neith {
             },
         }
     }
+
     fn write_history(&self, binding: String, date: String, start: Instant, table: MutexGuard<Table>) -> Result<(), Error> {
         // I use length => no need to add +1, len does that by
         // itself.
@@ -577,6 +644,7 @@ impl Neith {
         return Ok(());
         
     }
+
     /// Check if a table exists. returns `true` if it is found, `false` otherwise.
     pub fn exists_table(&self, name: String) -> Result<bool, Error> {
         for table in &self.tables {
@@ -592,6 +660,7 @@ impl Neith {
         }
         return Ok(false);
     }
+
     fn select_all_rows(&self, table_index: usize) -> Result<Vec<usize>, Error> {
         let table = self.tables[table_index].lock();
         if table.is_ok() {
@@ -602,6 +671,7 @@ impl Neith {
             return Err(Error::other("Couldn't lock table!"));
         }
     }
+
     fn search_conditionals(&self, conditions: String, table_index: usize) -> Result<Vec<usize>, Error> {
         let decoded_conditions = decode_list_conditions(conditions, self.split_pattern.clone())?;
         let mut encoded_conditions = encode_list_conditions(decoded_conditions, self.split_pattern.clone())?;
@@ -689,6 +759,7 @@ impl Neith {
         }
         return Ok(found_data);
     }
+
     fn search_for_table(&self, tablename: String) -> Result<usize, Error> {
         let mut counter: usize = 0;
         for entry in &self.tables {
@@ -703,10 +774,12 @@ impl Neith {
         }
         return Err(Error::other(format!("Table with name {} not found.", tablename)));
     }
+
     fn delete_table(&mut self, tablename: String) -> Result<Success, Error> {
         let _ = self.tables.remove(self.search_for_table(tablename)?);
         return Ok(Success::SuccessMessage(true))
     }
+
     fn delete_column(&mut self, tablename: String, columnname: String) -> Result<Success, Error> {
         let table_index = self.search_for_table(tablename)?;
         let table = self.tables[table_index].lock();
@@ -722,5 +795,6 @@ impl Neith {
             return Err(Error::other("Couldn't lock table!"));
         }
     }
+
 }
 
