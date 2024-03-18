@@ -42,11 +42,12 @@ Having said all this, Neith gives the perfect excuse for a bad performing progra
 - uses its own sql-like query langauge, Nql or NeithQueryLanguage
 - convenience functions for the max, min entry of a column and length of a table!
 - surprisingly Neith does not require that much more code than most other db implementations
+- Toggleable autosave to disk
+- Transform a ram-only database into a normal one, and save its contents
 
 ## Roadmap
 
-- Toggleable autosave to disk
-- Transform a ram-only database into a normal one, and save its contents
+Neith is considered Feature complete, this may change in the future though.
 
 ## Design and philosophy of Neith
 
@@ -90,7 +91,8 @@ Neith cannot execute transactions concurrently.
 
 Neith does not save the state to disc automatically, and if used in `ram-mode` it cannot save the state at all. So it is up to the user to ensure that a save to disc happens at appropriate points in their program.
 
-Maybe I will implement a flag for automatic saving. This however is a [compute intensive operation](#saving-implementation), so it would probably default to `off` just like with the `job-history` table.
+I implemented a flag for automatic saving. This can be set using the `set_autosave()` function. Using it you can turn the autosave on and off. Passing it true will turn autosave on, passing it false will turn it off again.
+Autosaving is a [compute intensive operation](#saving-implementation), so it defaults to `off` just like with the `job-history` table.
 
 ### Backend V2
 
@@ -454,10 +456,24 @@ Ending the program without `.save()`-ing the connection, will not save the data 
 Example code:
 ```
 let con = Neith::connect("test");
-let _ = con.save();
+let _ = con.clone().save();
 ```
 
 This opens and immediately saves the state of Neith.
+
+Please consider using pointers or similar to store the Neith struct itself, as neith does not implement any Copy functiionality and would need to be cloned entirely to be saved. Depending on the size in ram this can cause problems.
+
+##### Autosave
+
+You can also use the autosave feature like this:
+
+```
+let con = Neith::connect("test");
+let answer = con.set_autosave(true);
+assert_eq!(answer.unwrap(), Success::SuccesssMessage(true));
+```
+
+Again, saving is resource intenisve, and the autosave does clone the entire db.
 
 ##### Saving implementation
 
