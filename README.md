@@ -45,7 +45,7 @@ Having said all this, Neith gives the perfect excuse for a bad performing progra
 
 ## Roadmap
 
-- Add toggleable autosave to disk
+- Toggleable autosave to disk
 - Transform a ram-only database into a normal one, and save its contents
 
 ## Design and philosophy of Neith
@@ -146,7 +146,7 @@ Types are followed by their respective name in the API in parenthesis.
 > Lists can contain up to five nested lists.
 
 ## API
-Neith has a very simple API. It uses these functions, `connect()`, `execute()`, `set_marker()`, `set_job_history()` as well as `save()`.
+Neith has a very simple API. It uses these functions, `connect()`, `execute()`, `set_marker()`, `set_job_history()`, `make_persitant()` as well as `save()`.
 
 `connect()` is only used once to create a connection to the database, for `ram-mode`, or a more detailed explanation check [here!](#connecting)
 
@@ -276,6 +276,12 @@ let _ = con.set_job_history(true);
 > Just treat it as read-only.
 > Even though it is not. Trust me.
 > The table is write-able, so you could do what you want with it. I would recommend against it though. So if something breaks it is your fault, I warned you.
+
+#### Ram mode
+
+Neith can be launched in `ram_mode`, meaning that all data will be held in memory only. None of the data ever reaches the disk. (Except for the ram to disk shenanigans windows 7? or something did. No promises for wierd os behavior!)
+
+The databank can be made persistant by calling `make_persistant()` on the database, you will need to supply a valid location. This will make a save of the current state of the database, making it persistant and removing all the benefits of being in `ram_mode`. This could be useful for some use cases however, so this functionality exists, but is left out of the testing regime.
 
 #### Split marker
 
