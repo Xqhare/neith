@@ -120,6 +120,17 @@ impl Neith {
     pub fn save(self) -> Result<Success, json::JsonError> {
         return write_neithdb_file(self);
     }
+    /// Makes Neith persistant and saves it's current state at the supplied Path. This path needs
+    /// to be valid.
+    ///
+    /// ## Errors
+    /// Will error if supplied with an incorrect path or if Neith does not have write permission at
+    /// the supplied path.
+    pub fn make_persistant(&mut self, save_path: PathBuf) -> Result<Success, json::JsonError> {
+        self.path = save_path;
+        self.ram_mode = false;
+        return self.clone().save();
+    }
     // This is the general apperance of a mk_table call.
     // mk_table(table_name, column_vec((column_name0, unique_bool, type)), (column_name1, unique_bool, type))
     //
