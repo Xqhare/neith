@@ -17,6 +17,7 @@ pub fn read_json_from_neithdb_file<P>(filename: P) -> JsonValue where P: AsRef<P
     let out = parse(&buffer).expect("Invalid json file!");
     return out;
 }
+
 /// Takes the database and writes it to file.
 ///
 /// ## Returns
@@ -58,6 +59,7 @@ pub fn write_neithdb_file(neith: Neith) -> Result<Success> {
         return Err(JsonError::wrong_type("Error during writing!"));
     }
 }
+
 /// Takes in a `neith::Data` and encodes it as a `JsonValue`.
 /// This supports up to 5 nested lists!
 ///
@@ -137,3 +139,4 @@ fn decode_data_to_jsonval(neith_data: crate::Data) -> JsonValue {
     }
     return make_json_val(neith_data);
 }
+

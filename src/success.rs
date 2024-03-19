@@ -12,6 +12,7 @@ pub enum Success {
 }
 
 impl Success {
+
     /// Function to inspect if Success is wrapping a result.
     ///
     /// ## Returns
@@ -22,6 +23,7 @@ impl Success {
             _ => false,
         }
     }
+
     /// Function to get the contents of a Success wrapping a result.
     ///
     /// ## Returns
@@ -32,4 +34,6 @@ impl Success {
             _ => None,
         }
     }
+
 }
+

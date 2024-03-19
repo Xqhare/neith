@@ -13,12 +13,15 @@ pub enum Data {
 }
 
 impl Default for Data {
+
     fn default() -> Self {
         return Data::Null();
     }
+
 }
 
 impl Data {
+
     pub fn from(value: String, split_pattern: String) -> Self {
         let bool_test = value.parse::<bool>();
         if bool_test.is_ok() {
@@ -41,62 +44,71 @@ impl Data {
         } else {
             return Data::String(value);
         }
-
     }
+
     pub fn is_null(&self) -> bool {
         match self {
             Self::Null() => true,
             _ => false,
         }
     }
+
     pub fn is_string(&self) -> bool {
         match self {
             Self::String(_contents) => true,
             _ => false,
         }
     }
+
     pub fn get_string(&self) -> Option<String> {
         match self {
             Self::String(contents) => Some(contents.to_owned()),
             _ => None,
         }
     }
+
     pub fn is_bool(&self) -> bool {
         match self {
             Self::Bool(_contents) => true,
             _ => false,
         }
     }
+
     pub fn get_bool(&self) -> Option<bool> {
         match self {
             Self::Bool(contents) => Some(contents.to_owned()),
             _ => None,
         }
     }
+
     pub fn is_float(&self) -> bool {
         match self {
             Self::Float(_contents) => true,
             _ => false,
         }
     }
+
     pub fn get_float(&self) -> Option<f64> {
         match self {
             Self::Float(contents) => Some(contents.to_owned()),
             _ => None,
         }
     }
+
     pub fn is_list(&self) -> bool {
         match self {
             Self::List(_contents) => true,
             _ => false,
         }
     }
+
     pub fn get_list(&self) -> Option<Vec<Data>> {
         match self {
             Self::List(contents) => Some(contents.to_owned()),
             _ => None,
         }
     }
+
     /// Returns the type of data.
     ///
     /// - List
@@ -126,6 +138,7 @@ impl Data {
             },
         }
     }
+
     /// Constructs a boolean, float or string out of a supplied value.
     fn from_single_for_list(value: String) -> Self {
         let bool_test = value.parse::<bool>();
@@ -139,6 +152,7 @@ impl Data {
             return Data::String(value);
         }
     }
+
     /// Makes a singular data type out of a json value.
     pub fn from_json_value(value: &JsonValue) -> Result<Self, std::io::Error> {
         if value.is_boolean() {
@@ -170,11 +184,13 @@ impl Data {
         }
         return Err(Error::other("Failure to read json value"));
     }
+
     /// Makes a new empty list!
     pub fn new_list() -> Self {
         let out: Vec<Data> = Vec::new();
         return Self::List(out);
     }
+
     /// Makes a new list out of a json value.
     pub fn make_list(json_array: &JsonValue) -> Self {
         let mut out: Vec<Data> = Vec::new();
@@ -184,6 +200,6 @@ impl Data {
         }
         return Self::List(out);
     }
-}
 
+}
 

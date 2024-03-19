@@ -11,14 +11,17 @@ pub struct Table {
 }
 
 impl Default for Table {
+
     fn default() -> Self {
         let name = String::new();
         let columns: Vec<Column> = Vec::new();
         return Table {name, columns, };
     }
+
 }
 
 impl From<(&str, &JsonValue)> for Table {
+
     fn from(value: (&str, &JsonValue)) -> Self {
         let name = value.0.to_string();
         let mut out: Vec<Column> = Vec::new();
@@ -27,9 +30,11 @@ impl From<(&str, &JsonValue)> for Table {
         }
         return Table{name, columns: out};
     }
+
 }
 
 impl From<(String, Vec<(String, bool)>)> for Table {
+
     fn from(value: (String, Vec<(String, bool)>)) -> Self {
         let tablename = value.0;
         let columns_in = value.1;
@@ -45,9 +50,11 @@ impl From<(String, Vec<(String, bool)>)> for Table {
             columns,
         };
     }
+
 }
 
 impl Table { 
+
     /// Create new columns in this table.
     ///
     /// ## Returns
@@ -59,6 +66,7 @@ impl Table {
         }
         return Success::SuccessMessage(true);
     }
+
     /// Delete data from columns of this table.
     ///
     /// ## Returns
@@ -79,6 +87,7 @@ impl Table {
         }
         return Ok(Success::SuccessMessage(true));
     }
+
     /// Update data from columns of this table.
     ///
     /// ## Returns
@@ -101,6 +110,7 @@ impl Table {
         }
         return Ok(Success::SuccessMessage(true));
     }
+
     /// Select data from columns of this table.
     ///
     /// ## Returns
@@ -131,6 +141,7 @@ impl Table {
         }
         return Success::Result(found_data);
     }
+
     /// Writes new data into columns of this table.
     ///
     /// ## Returns
@@ -153,6 +164,7 @@ impl Table {
         }
         return Ok(Success::SuccessMessage(true));
     }
+
     /// Searches for the column with the given column name.
     ///
     /// ## Returns
@@ -170,6 +182,7 @@ impl Table {
         }
         return Err(Error::other(format!("Column with name '{}' not found.", columnname)));
     }
+
     /// Deletes the column with the given column name.
     ///
     /// ## Returns
@@ -181,6 +194,7 @@ impl Table {
         let _ = self.columns.remove(self.search_for_column(columnname)?);
         return Ok(Success::SuccessMessage(true));
     }
+
     /// ## Returns
     /// A vector containing the indices of all rows.
     pub fn select_all_rows(&self) -> Vec<usize> {
@@ -192,6 +206,7 @@ impl Table {
             }
         return out;
     }
+
     /// Returns the index of the data in the column.
     pub fn search_column_data(&self, columnname: String, data: Data) -> Result<Vec<usize>, Error> {
         let column_index = self.search_for_column(columnname)?;
@@ -209,9 +224,11 @@ impl Table {
             return Err(Error::other("No data found!"));
         }
     }
+
     /// Gives the number of rows in the table.
     pub fn len(&self) -> usize {
         return self.columns[0].contents.all_row_data.len();
     }
+
 }
 
