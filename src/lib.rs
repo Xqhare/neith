@@ -142,7 +142,8 @@ impl Neith {
         return self.clone().save();
     }
 
-    /// Activates the autosave feature to save after every interaction with Neith.
+    /// Sets the autosave feature to save after every interaction with Neith.
+    /// Passing in `true` activates, `false` deactivates the feature.
     ///
     /// ## Errors
     /// Will error if ram mode is active.
