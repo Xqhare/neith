@@ -50,19 +50,24 @@ Having said all this, Neith gives the perfect excuse for a bad performing progra
 
 Neith is considered Feature complete, this may change in the future though.
 
+- Correct ordering of answers of search queries.
+    - Currently answers are returned in column order of the table, meaning that if you search for 'column3' and 'column2' combined in that order, the answer will be returend in the order 'column2' and then 'column3'
+
 ## Design and philosophy of Neith
 
 > [!IMPORTANT]
 > Neith is un-opinionated and quite type-agnostic for a rust program. As such it will do whatever you tell it to do.
 > It will only check for uniqueness of a value in a column if a column was marked as such.
 
-Neith is designed to do what the user or program is telling it, whatever that is. Neith will execute anything passed to it, as long as it can decode it. There is no hand-holding, Neith will never assume or interpret what the user wants to do, it just does.
+Neith is designed to do what the user or program is telling it, whatever that is. Neith will execute anything passed to it, as long as it can decode it. There is no hand-holding, Neith will never assume or interpret what the user wants to do, it just does. (80% of the time it works every time!)
 
 I tried to make it as un-opinionated as possible so that it will try to do whatever it is told to do; So beware of what you do!
 For example, you can put whatever you want into any column, be it a number, string, boolean or list. This is by design, Neith will do what you tell it, and only inform you if it encountered an Error or succeeded.
-These design principles are also the reason why Neith will not save to disc by itself.
+These design principles are also the reason why Neith will not save to disc by itself. Except if you turn on [autosave](#autosave) of course.
 
 To reiterate, Neith will not assume what it should do, it will wait for you to tell it what to do.
+
+Neith does not use a WAL (Write Ahead Log) and cannot recover from sudden shutdown itself. So please ensure a proper shutdown of Neith and DO NOT USE THIS IN ANY ACTUAL PRODUCTION SETTING! I warned you!
 
 ### ACID Compliance
 
@@ -407,7 +412,7 @@ Neith supports conditional statements for querying data. Supported are `and`, `n
 
 > [!NOTE]
 > The * symbol is supported with the same usage as in sql, meaning 'all columns'.
-> Select returns data ALWAYS in the order it was found in the table, e.g. if you search for 'column7, column1, column3' the results will be in the order 'column1, column3, column7'.
+> Select returns data ALWAYS in the order it was found in the table, e.g. if you search for 'column7, column1, column3' the results will be in the order 'column1, column3, column7' and not your specified search order.
 
 Example code:
 ```
@@ -478,7 +483,14 @@ Again, saving is resource intenisve, and the autosave does clone the entire db.
 
 ##### Saving implementation
 
-Neith will save the database at the supplied path and the name during creation, with the extension `.neithdb`. This is just a `json` file, which is also the reason for subpar performance during saving and connecting of a medium to large database. This does also mean that a migration from Neith to almost any other database should be pretty easy.
+Neith will save the database at the supplied path and the name during creation, with the extension `.neithdb`. This is just a `json` file, which is also the reason for subpar performance during saving and connecting of a medium to large database. This does also mean that a migration from Neith to almost any other database should be pretty easy. The json schema is wierd, for lack of any better descriptor, so you will probably need to handroll a conversion tool for this.
+
+###### Json schema
+
+In short a `.neithdb`-file contains a json-object for each table, each table contains a object for each column.
+This object contains two fields, if the row is unique, and the contents of all rows of this column.
+
+To help visualise this I recommend creating a small `.neithdb`-file and looking at it yourself. It really is not as complicated as I make it sound.
 
 ## Example Database
 
