@@ -37,6 +37,7 @@ pub struct Neith {
 }
 
 impl Default for Neith {
+
     fn default() -> Self {
         let tables: Vec<Box<Rc<Mutex<Table>>>> = Default::default();
         let ram_mode = true;
@@ -51,6 +52,7 @@ impl Default for Neith {
 }
 
 impl From<PathBuf> for Neith {
+
     fn from(value: PathBuf) -> Self {
         let path = canonize_path(value);
         let read_file = read_json_from_neithdb_file(path.clone());
@@ -66,9 +68,11 @@ impl From<PathBuf> for Neith {
         }
         return Neith{ tables, path, ram_mode, autosave, job_history, job_history_table_index, split_pattern};
     }
+
 }
 
 impl Neith {
+
     /// Creates a new Neith instance, with no contents.
     /// For general use, `connect(filename)` is highly recommended.
     pub fn new(value: PathBuf, ram_mode: bool, job_history: bool) -> Self {
