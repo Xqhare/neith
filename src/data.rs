@@ -22,6 +22,7 @@ impl Default for Data {
 
 impl Data {
 
+    /// Creates a new Data struct from a String and split_pattern.
     pub fn from(value: String, split_pattern: String) -> Self {
         let bool_test = value.parse::<bool>();
         if bool_test.is_ok() {
@@ -46,6 +47,10 @@ impl Data {
         }
     }
 
+    /// Checks if the value is null.
+    ///
+    /// ## Returns
+    /// True if it is null, false if not.
     pub fn is_null(&self) -> bool {
         match self {
             Self::Null() => true,
@@ -53,6 +58,10 @@ impl Data {
         }
     }
 
+    /// Checks if the value is a string.
+    ///
+    /// ## Returns
+    /// True if it is null, false if not.
     pub fn is_string(&self) -> bool {
         match self {
             Self::String(_contents) => true,
@@ -60,6 +69,7 @@ impl Data {
         }
     }
 
+    /// Returns the String. Will return None if value is not a String.
     pub fn get_string(&self) -> Option<String> {
         match self {
             Self::String(contents) => Some(contents.to_owned()),
@@ -67,6 +77,10 @@ impl Data {
         }
     }
 
+    /// Checks if the value is a boolean.
+    ///
+    /// ## Returns
+    /// True if it is null, false if not.
     pub fn is_bool(&self) -> bool {
         match self {
             Self::Bool(_contents) => true,
@@ -74,6 +88,7 @@ impl Data {
         }
     }
 
+    /// Returns the boolean. Will return None if value is not a boolean.
     pub fn get_bool(&self) -> Option<bool> {
         match self {
             Self::Bool(contents) => Some(contents.to_owned()),
@@ -81,6 +96,10 @@ impl Data {
         }
     }
 
+    /// Checks if the value is a float.
+    ///
+    /// ## Returns
+    /// True if it is null, false if not.
     pub fn is_float(&self) -> bool {
         match self {
             Self::Float(_contents) => true,
@@ -88,6 +107,7 @@ impl Data {
         }
     }
 
+    /// Returns the float. Will return None if value is not a float.
     pub fn get_float(&self) -> Option<f64> {
         match self {
             Self::Float(contents) => Some(contents.to_owned()),
@@ -95,6 +115,10 @@ impl Data {
         }
     }
 
+    /// Checks if the value is a list.
+    ///
+    /// ## Returns
+    /// True if it is null, false if not.
     pub fn is_list(&self) -> bool {
         match self {
             Self::List(_contents) => true,
@@ -102,6 +126,7 @@ impl Data {
         }
     }
 
+    /// Returns the list. Will return None if value is not a list.
     pub fn get_list(&self) -> Option<Vec<Data>> {
         match self {
             Self::List(contents) => Some(contents.to_owned()),

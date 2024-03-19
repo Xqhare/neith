@@ -125,6 +125,7 @@ impl Neith {
         return Ok(Success::SuccessMessage(value));
     }
 
+    /// Use to set the split marker used in nql. Default is `,+`, can be set to any string.
     pub fn set_marker(&mut self, split_pattern: &str) {
         self.split_pattern = split_pattern.to_string();
     }
