@@ -1,24 +1,24 @@
 # NEITH: Neith Enhances Information Through Hierarchy
 Neith is a small, lightweight and BLAZINGLY FAST database, written in and for rust.
 
-It can be used as a normal run of the mill on disc database; saving and reading, to and from disc respectively. [More here!](#connecting)
+It can be used as a normal run of the mill on disk database; saving and reading, to and from disk respectively. [More here!](#connecting)
 
-It can also be used in `ram-mode` meaning that all data is held only in ram, if used this way Neith cannot save it's appstate. The data is however not encrypted and could be read from memory, so this is not a very secure database. [More here!](#connecting)
+It can also be used in `ram-mode` meaning that all data is held in ram only, if used this way Neith cannot save it's appstate. The data is however not encrypted and could be read from memory, so this is not a very secure database. [More about conecting here!](#connecting) [More Info about the ram mode here!](#ram-mode) 
 
 Neith has a `job_history` table that can be turned on, for saving some basic usage and duration logging. [More here!](#job-history)
 
 > [!NOTE]
-> It is not "Production-ready" and it will probably never be, I made this because I could, not because I should. I do consider it "stable" though, but take that with a grain of salt.
-> While you can use it as a database, the developer experience is lacking as you can see further down in the example syntax.
+> It is not "Production-ready" and it will probably never be, I made this because I could, not because I should. I do consider it stable and feature complete though, but take that with a grain of salt.
+> While you can use it as a database, the developer experience is lacking as you can see further down in the example syntax. But it is not that much worse than some other databases I have used.
 > I am using Neith as a "stable" database for personal projects, but it remains with some un- or under-tested code. Other code did work when it was tested but may now be broken - It will be fixed if and when I find any bugs.
-> I can only guarantee jank and maybe bugs, but that is a promise I can keep!
+> I can only guarantee jank and maybe bugs, but that is a promise I glady make!
 
 > [!IMPORTANT]
-> If you really want to use Neith, please read this readme completely (especially this chapter), I tried my best explaining it.
+> If you really want to use Neith, please read this readme completely, I tried my best explaining it.
 
 The name Neith is derived from Neith, the ancient Egyptian goddess of war, creation, and weaving. She represents the intricate connections and patterns that form the cosmos and foundation of knowledge.
 
-Neith is not made for large projects, or projects that need to do a lot of data intensive work. Neith is made for small projects, with the need for some database storage and simple logic. For large data-sets more ram is needed as Neith holds the entire database in memory from startup, leading to fast reads and writes (except the save to disc of course). Users are strongly discouraged from using complex API requests, this is mainly because it does not support multi-core - maybe at some point, no promises - so performance can be impacted by such requests.
+Neith is not made for large projects, or projects that need to do a lot of data intensive work. Neith is made for small projects, with the need for some database storage and simple logic. For large data-sets more ram is needed as Neith holds the entire database in memory from startup, leading to fast reads and writes (except the save to disk of course). Users are strongly discouraged from using complex API requests, this is mainly because it does not support multi-core - maybe at some point, no promises - so performance can be impacted by such requests.
 
 My limited testing and experience has shown that Neith does quite well as long as the complexity and amount of data is managed, a simple table can hold 50k rows and while a slowdown is noticeable, it is still acceptable. For more complex tables the row-count is a fair bit lower at around 30k.
 Splitting the data up into more tables inside Neith can help with performance too! A good rule of thumb is that the shorter the table the better the performance.
@@ -33,17 +33,18 @@ Having said all this, Neith gives the perfect excuse for a bad performing progra
 - '.neithdb' is just '.json' making moving databases feasable
 - lovingly handcrafted, no AI code!
 - now with the v2 backend! And as 2 is twice as big as 1, it clearly is faster by the same factor!
-- minimal dependencies (2 to be precise, chrono for timekeeping and json for json stuff)
+- minimal dependencies (2 to be precise, chrono for timekeeping and json because my own json parser hasn't been written yet)
 - ram-mode, where absolutely nothing is written to disk
-- toggleable history table of all interactions with Neith
+- toggleable history table of all interactions with Neith with their compute time!
 - All CRUD operations
 - Logical chaining of conditions
 - ACID compliance
 - uses its own sql-like query langauge, Nql or NeithQueryLanguage
-- convenience functions for the max, min entry of a column and length of a table!
-- surprisingly Neith does not require that much more code than most other db implementations
+- convenience functions for the max or min entry of a column and length of a table!
+- surprisingly Neith does not require that much more boilerplate code than most other db implementations
 - Toggleable autosave to disk
 - Transform a ram-only database into a normal one, and save its contents
+- Single threaded for the nostalgic feel
 
 ## Roadmap
 
