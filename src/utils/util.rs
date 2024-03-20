@@ -15,6 +15,7 @@ pub fn strip_leading_word(to_strip: String) -> (String, String) {
     let remainder = split_query.clone().skip(1).collect::<String>();
     return (command, remainder);
 }
+
 /// Strips the leading condition list of a given string and returns a touple containing both.
 ///
 /// ## Returns
@@ -27,6 +28,7 @@ pub fn strip_condition_list(to_strip: String) -> (String, String) {
     let remainder = split_query.skip(1).collect::<String>().trim_start().to_string();
     return (condition_list, remainder);
 }
+
 /// Strips the leading column list of a given string and returns a touple containing both.
 ///
 /// ## Returns
@@ -49,6 +51,7 @@ pub fn strip_column_list(to_strip: String) -> Result<(String, String), Error> {
         return Err(Error::other(format!("Invalid nql syntax; {:?} is not a column list (columnname, othercolumnname)", to_strip)));
     }
 }
+
 // Add my own file extension, because I can! By first removing any the user might have set,
 // and then adding on my own.
 /// This replaces the path extension of the database file with `.neithdb`.
@@ -61,6 +64,7 @@ pub fn canonize_path(value: PathBuf) -> PathBuf {
         path.set_extension("neithdb");
         return path;
 }
+
 /// Checks for the existance of a `.neithdb` file at the supplied path.
 ///
 /// ## Returns
@@ -71,6 +75,7 @@ pub fn check_for_persistant_db(filename: PathBuf) -> bool {
         _ => return false,
     }
 }
+
 /// Decodes a column list passed in as a string. For decoding it also needs the table.
 ///
 /// ## Returns
@@ -93,6 +98,7 @@ pub fn decode_column_list(input: String, table: Table) -> Vec<String> {
     }
     
 }
+
 /// Decodes the colum-maker list from a string.
 ///
 /// ## Returns
@@ -122,6 +128,7 @@ pub fn decode_columnmaker(input: String) -> Result<Vec<(String, bool)>, Error> {
     }
     return Ok(temp_column_bind);
 }
+
 // decode this: 
 /// Decodes a list passed in as a string, and a split pattern that seperates the different entries.
 /// The list has the form of: (column1 = 2,+ column2 = -2.04,+ column3 = true,+ column4 = text,+ column5 = (1.04, 2, false, more text))
@@ -137,7 +144,7 @@ pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Vec<(S
     } else {
         clean_in = clean_in.trim_end_matches(")").to_string();
     }
-    let split = clean_in.split(split_pattern.as_str());
+    let split = clean_in.split(&split_pattern);
     let mut list_check = false;
     for entry in split {
         if entry.contains("(") {
@@ -145,22 +152,23 @@ pub fn decode_list_columndata(list_val: String, split_pattern: String) -> Vec<(S
         }
         if list_check {
             list_check = false;
-            let new = decode_single_columndata(entry);
+            let new = decode_single_columndata(entry, &split_pattern);
             out.push(new);
         } else {
-            let new = decode_single_columndata(entry);
+            let new = decode_single_columndata(entry, &split_pattern);
             out.push(new);
         }
     }
     return out;
 }
+
 // decode this: (other_columnname = newdata) -> as smaller more focused function for more broad
 // usage during decoding.
 /// Decodes a singular pair of `colum_name = data` passed in as a `&str`.
 ///
 /// ## Returns
 /// A touple of `(String, Data)` where `String` is the column name and `Data` is the data.
-pub fn decode_single_columndata(single_val: &str) -> (String, Data) {
+pub fn decode_single_columndata(single_val: &str, split_pattern: &str) -> (String, Data) {
     // I get: "columnname = data"
     let mut cleaned_input = single_val.replacen("=", "", 1);
     if cleaned_input.contains("]") {
@@ -169,7 +177,7 @@ pub fn decode_single_columndata(single_val: &str) -> (String, Data) {
     }
     let split_input = cleaned_input.split_whitespace();
     let name = split_input.clone().take(1).collect::<String>();
-    let data = Data::from(split_input.skip(1).map(|d| format!("{} ", d)).collect::<String>().trim_end().to_string());
+    let data = Data::from(split_input.skip(1).map(|d| format!("{} ", d)).collect::<String>().trim_end().to_string(), split_pattern.to_string());
     return (name, data);
 }
 
@@ -200,6 +208,7 @@ pub fn decode_list_conditions(value: String, split_pattern: String) -> Result<Ve
     }
     return Ok(out);
 }
+
 /// Encodes list conditions as decoded by `decode_list_conditions`.
 /// 
 ///
@@ -210,7 +219,7 @@ pub fn decode_list_conditions(value: String, split_pattern: String) -> Result<Ve
 ///
 /// ## Errors
 /// If supplied with invalid nql.
-pub fn encode_list_conditions(value: Vec<String>) -> Result<Vec<(String, Data)>, Error> {
+pub fn encode_list_conditions(value: Vec<String>, split_pattern: String) -> Result<Vec<(String, Data)>, Error> {
     let mut encoding_list: Vec<(String, Data)> = Vec::new();
     for thing in &value {
         let mut cleaned_thing = thing.to_owned();
@@ -222,7 +231,7 @@ pub fn encode_list_conditions(value: Vec<String>) -> Result<Vec<(String, Data)>,
             cleaned_thing = temp;
         }
         if cleaned_thing.contains(" = ") {
-            let decode_columndata = decode_single_columndata(&cleaned_thing);
+            let decode_columndata = decode_single_columndata(&cleaned_thing, &split_pattern);
             let name = decode_columndata.0;
             let data = decode_columndata.1;
             encoding_list.push((name, data));
@@ -238,6 +247,7 @@ pub fn encode_list_conditions(value: Vec<String>) -> Result<Vec<(String, Data)>,
     }
     return Ok(encoding_list);
 }
+
 /// Takes in two vectors of `usize` and a condition.
 /// Then checks both vectors against each other using the supplied condition.
 /// 
@@ -304,3 +314,4 @@ pub fn condition_check(search: Vec<usize>, condition: String, other_search: Vec<
     }
     return Ok(found_data);
 }
+

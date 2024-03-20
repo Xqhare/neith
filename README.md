@@ -1,24 +1,24 @@
 # NEITH: Neith Enhances Information Through Hierarchy
 Neith is a small, lightweight and BLAZINGLY FAST database, written in and for rust.
 
-It can be used as a normal run of the mill on disc database; saving and reading, to and from disc respectively. [More here!](#connecting)
+It can be used as a normal run of the mill on disk database; saving and reading, to and from disk respectively. [More here!](#connecting)
 
-It can also be used in `ram-mode` meaning that all data is held only in ram, if used this way Neith cannot save it's appstate. The data is however not encrypted and could be read from memory, so this is not a very secure database. [More here!](#connecting)
+It can also be used in `ram-mode` meaning that all data is held in ram only, if used this way Neith cannot save it's appstate. The data is however not encrypted and could be read from memory, so this is not a very secure database. [More about conecting here!](#connecting) [More Info about the ram mode here!](#ram-mode) 
 
 Neith has a `job_history` table that can be turned on, for saving some basic usage and duration logging. [More here!](#job-history)
 
 > [!NOTE]
-> It is not "Production-ready" and it will probably never be, I made this because I could, not because I should. I do consider it "stable" though, but take that with a grain of salt.
-> While you can use it as a database, the developer experience is lacking as you can see further down in the example syntax.
+> It is not "Production-ready" and it will probably never be, I made this because I could, not because I should. I do consider it stable and feature complete though, but take that with a grain of salt.
+> While you can use it as a database, the developer experience is lacking as you can see further down in the example syntax. But it is not that much worse than some other databases I have used.
 > I am using Neith as a "stable" database for personal projects, but it remains with some un- or under-tested code. Other code did work when it was tested but may now be broken - It will be fixed if and when I find any bugs.
-> I can only guarantee jank and maybe bugs, but that is a promise I can keep!
+> I can only guarantee jank and maybe bugs, but that is a promise I glady make!
 
 > [!IMPORTANT]
-> If you really want to use Neith, please read this readme completely (especially this chapter), I tried my best explaining it.
+> If you really want to use Neith, please read this readme completely, I tried my best explaining it.
 
 The name Neith is derived from Neith, the ancient Egyptian goddess of war, creation, and weaving. She represents the intricate connections and patterns that form the cosmos and foundation of knowledge.
 
-Neith is not made for large projects, or projects that need to do a lot of data intensive work. Neith is made for small projects, with the need for some database storage and simple logic. For large data-sets more ram is needed as Neith holds the entire database in memory from startup, leading to fast reads and writes (except the save to disc of course). Users are strongly discouraged from using complex API requests, this is mainly because it does not support multi-core - maybe at some point, no promises - so performance can be impacted by such requests.
+Neith is not made for large projects, or projects that need to do a lot of data intensive work. Neith is made for small projects, with the need for some database storage and simple logic. For large data-sets more ram is needed as Neith holds the entire database in memory from startup, leading to fast reads and writes (except the save to disk of course). Users are strongly discouraged from using complex API requests, this is mainly because it does not support multi-core - maybe at some point, no promises - so performance can be impacted by such requests.
 
 My limited testing and experience has shown that Neith does quite well as long as the complexity and amount of data is managed, a simple table can hold 50k rows and while a slowdown is noticeable, it is still acceptable. For more complex tables the row-count is a fair bit lower at around 30k.
 Splitting the data up into more tables inside Neith can help with performance too! A good rule of thumb is that the shorter the table the better the performance.
@@ -26,19 +26,48 @@ Please note that the more columns a table has, performance is impacted too. Howe
 
 Having said all this, Neith gives the perfect excuse for a bad performing program, as everyone knows that it's always the database's fault!
 
+## Features
+
+- small
+- reasonably fast
+- '.neithdb' is just '.json' making moving databases feasable
+- lovingly handcrafted, no AI code!
+- now with the v2 backend! And as 2 is twice as big as 1, it clearly is faster by the same factor!
+- minimal dependencies (2 to be precise, chrono for timekeeping and json because my own json parser hasn't been written yet)
+- ram-mode, where absolutely nothing is written to disk
+- toggleable history table of all interactions with Neith with their compute time!
+- All CRUD operations
+- Logical chaining of conditions
+- ACID compliance
+- uses its own sql-like query langauge, Nql or NeithQueryLanguage
+- convenience functions for the max or min entry of a column and length of a table!
+- surprisingly Neith does not require that much more boilerplate code than most other db implementations
+- Toggleable autosave to disk
+- Transform a ram-only database into a normal one, and save its contents
+- Single threaded for the nostalgic feel
+
+## Roadmap
+
+Neith is considered Feature complete, this may change in the future though.
+
+- Correct ordering of answers of search queries.
+    - Currently answers are returned in column order of the table, meaning that if you search for 'column3' and 'column2' combined in that order, the answer will be returend in the order 'column2' and then 'column3'
+
 ## Design and philosophy of Neith
 
 > [!IMPORTANT]
 > Neith is un-opinionated and quite type-agnostic for a rust program. As such it will do whatever you tell it to do.
 > It will only check for uniqueness of a value in a column if a column was marked as such.
 
-Neith is designed to do what the user or program is telling it, whatever that is. Neith will execute anything passed to it, as long as it can decode it. There is no hand-holding, Neith will never assume or interpret what the user wants to do, it just does.
+Neith is designed to do what the user or program is telling it, whatever that is. Neith will execute anything passed to it, as long as it can decode it. There is no hand-holding, Neith will never assume or interpret what the user wants to do, it just does. (80% of the time it works every time!)
 
 I tried to make it as un-opinionated as possible so that it will try to do whatever it is told to do; So beware of what you do!
 For example, you can put whatever you want into any column, be it a number, string, boolean or list. This is by design, Neith will do what you tell it, and only inform you if it encountered an Error or succeeded.
-These design principles are also the reason why Neith will not save to disc by itself.
+These design principles are also the reason why Neith will not save to disc by itself. Except if you turn on [autosave](#autosave) of course.
 
 To reiterate, Neith will not assume what it should do, it will wait for you to tell it what to do.
+
+Neith does not use a WAL (Write Ahead Log) and cannot recover from sudden shutdown itself. So please ensure a proper shutdown of Neith and DO NOT USE THIS IN ANY ACTUAL PRODUCTION SETTING! I warned you!
 
 ### ACID Compliance
 
@@ -68,7 +97,13 @@ Neith cannot execute transactions concurrently.
 
 Neith does not save the state to disc automatically, and if used in `ram-mode` it cannot save the state at all. So it is up to the user to ensure that a save to disc happens at appropriate points in their program.
 
-Maybe I will implement a flag for automatic saving. This however is a [compute intensive operation](#saving-implementation), so it would probably default to `off` just like with the `job-history` table.
+I implemented a flag for automatic saving. This can be set using the `set_autosave()` function. Using it you can turn the autosave on and off. Passing it true will turn autosave on, passing it false will turn it off again.
+Autosaving is a [compute intensive operation](#saving-implementation), so it defaults to `off` just like with the `job-history` table.
+
+### Backend V2
+
+Neith's backend has been rewritten with Atomicity and better performance in mind. To that end, tables are now protected by a 'Mutex<_>' and behind a reference. Tables are now also explicitly stored on the heap, improving the performance for larger datasets especially.
+While the goal of increased Atomicity has been achieved, performance could, as always, be improved further.
 
 ## Naming
 
@@ -119,7 +154,7 @@ Types are followed by their respective name in the API in parenthesis.
 > Lists can contain up to five nested lists.
 
 ## API
-Neith has a very simple API. It uses these functions, `connect()`, `execute()`, `set_marker()`, `set_job_history()` as well as `save()`.
+Neith has a very simple API. It uses these functions, `connect()`, `execute()`, `set_marker()`, `set_job_history()`, `make_persitant()` as well as `save()`.
 
 `connect()` is only used once to create a connection to the database, for `ram-mode`, or a more detailed explanation check [here!](#connecting)
 
@@ -168,9 +203,9 @@ Nql is a very simple sql and mysql inspired syntax for interacting with Neith.
 
 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 
 | - | - | - | - | - | - | - | 
-| execute( | new | table / column / data | 'tablename' | with / with / ('other_columnname' = 'new_data',+ 'different_column' = '(list, of, data, in, parenthesis)',+ ...)!) | ('columnname' 'unique', ...)!) / ('columnname' 'unique', ...)!)
+| execute( | new | table / column / data | 'tablename' | with / with / ('other_columnname' = 'new_data',+ 'different_column' = '(list,+ of,+ data,+ in,+ parenthesis)',+ ...)!) | ('columnname' 'unique', ...)!) / ('columnname' 'unique', ...)!)
 | execute( | delete | table / column / data | with / with / in | 'tablename'!) / 'columnname' / 'tablename' | in / where | 'tablename'!) / ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = 'other data',+ ...]!) |
-| execute( | update | 'tablename' | where | ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = '(other, data, as, list)',+ ...] | with | ('other_columnname' = 'new_data',+ 'different_column' = '(list, of, data, in, parenthesis)',+ ...)!) | 
+| execute( | update | 'tablename' | where | ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = '(other, data, as, list)',+ ...] | with | ('other_columnname' = 'new_data',+ 'different_column' = '(list,+ of,+ data,+ in,+ parenthesis)',+ ...)!) | 
 | execute( | select | (columnname0, columnname1, ...)  OR * | from | 'tablename' | where | ['columnname' = 'data',+ {and/not/or/xor} 'other_columnname' = 'other data',+ ...]!) |
 | execute( | get | min / max / len | in / in / of |  'columnname' / 'columnname' / 'tablename'!) | from / from | 'tablename'!) / 'tablename'!) |
 
@@ -249,6 +284,12 @@ let _ = con.set_job_history(true);
 > Just treat it as read-only.
 > Even though it is not. Trust me.
 > The table is write-able, so you could do what you want with it. I would recommend against it though. So if something breaks it is your fault, I warned you.
+
+#### Ram mode
+
+Neith can be launched in `ram_mode`, meaning that all data will be held in memory only. None of the data ever reaches the disk. (Except for the ram to disk shenanigans windows 7? or something did. No promises for wierd os behavior!)
+
+The databank can be made persistant by calling `make_persistant()` on the database, you will need to supply a valid location. This will make a save of the current state of the database, making it persistant and removing all the benefits of being in `ram_mode`. This could be useful for some use cases however, so this functionality exists, but is left out of the testing regime.
 
 #### Split marker
 
@@ -371,7 +412,7 @@ Neith supports conditional statements for querying data. Supported are `and`, `n
 
 > [!NOTE]
 > The * symbol is supported with the same usage as in sql, meaning 'all columns'.
-> Select returns data ALWAYS in the order it was found in the table, e.g. if you search for 'column7, column1, column3' the results will be in the order 'column1, column3, column7'.
+> Select returns data ALWAYS in the order it was found in the table, e.g. if you search for 'column7, column1, column3' the results will be in the order 'column1, column3, column7' and not your specified search order.
 
 Example code:
 ```
@@ -421,14 +462,35 @@ Ending the program without `.save()`-ing the connection, will not save the data 
 Example code:
 ```
 let con = Neith::connect("test");
-let _ = con.save();
+let _ = con.clone().save();
 ```
 
 This opens and immediately saves the state of Neith.
 
+Please consider using pointers or similar to store the Neith struct itself, as neith does not implement any Copy functiionality and would need to be cloned entirely to be saved. Depending on the size in ram this can cause problems.
+
+##### Autosave
+
+You can also use the autosave feature like this:
+
+```
+let con = Neith::connect("test");
+let answer = con.set_autosave(true);
+assert_eq!(answer.unwrap(), Success::SuccesssMessage(true));
+```
+
+Again, saving is resource intenisve, and the autosave does clone the entire db.
+
 ##### Saving implementation
 
-Neith will save the database at the supplied path and the name during creation, with the extension `.neithdb`. This is just a `json` file, which is also the reason for subpar performance during saving and connecting of a medium to large database. This does also mean that a migration from Neith to almost any other database should be pretty easy.
+Neith will save the database at the supplied path and the name during creation, with the extension `.neithdb`. This is just a `json` file, which is also the reason for subpar performance during saving and connecting of a medium to large database. This does also mean that a migration from Neith to almost any other database should be pretty easy. The json schema is wierd, for lack of any better descriptor, so you will probably need to handroll a conversion tool for this.
+
+###### Json schema
+
+In short a `.neithdb`-file contains a json-object for each table, each table contains a object for each column.
+This object contains two fields, if the row is unique, and the contents of all rows of this column.
+
+To help visualise this I recommend creating a small `.neithdb`-file and looking at it yourself. It really is not as complicated as I make it sound.
 
 ## Example Database
 
