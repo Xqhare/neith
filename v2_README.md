@@ -41,7 +41,7 @@ I still haven't decided on the file structure of the database.
 - There are probably two main options:
     1. One file per bucket
     2. One file per collection
-- I would want the crud log as high up the tree as possible, 
+- I would want the crud log as high up the tree as possible.
 
 #### File structure
 Pos1 one file per bucket:
@@ -102,7 +102,7 @@ I think I could at least partially solve these problems.
 Firstly by moving away form the one method call approach, to the chained method call approach.
 Secondly by writing documentation for specific functions - The documentation will be displayed right inside the IDE.
 
-Anything display to the developer as they write code should be the highest priority for the documentation, as this is where it is actually the most useful.
+Anything displaying to the developer as they write code should be the highest priority for the documentation, as this is where it is actually the most useful.
 
 ##### Structure rework
 
@@ -121,6 +121,15 @@ The system would also need to cope with data on disk, and I would like that to b
 
 The cache would basically mirror the directory structure of the database and search through only the cached data, returning `None` if the data is not cached. Then I can start the expensive disk checking.
 I could also just limit it to the file level, so any data held by the bucket or collection, whatever option I end up going with, would be cached.
+
+It would probably be prudent to calculate the cache whilst running - instead of doing this automagically just expose a function to do it.
+This turns the entire thing into a startup only thing.
+
+The size of the cache should be checked against any file to be read in, if it (and the current cache) exceeds the size it simply ends the startup caching.
+
+Limiting the cache size should only be possible outside `ram-mode`.
+
+No dynamic cache size, only statically allocated.
 
 ###### `Document-oriented` vs `Key-Value`
 The most interesting `nosql` database styles for me currently. \
